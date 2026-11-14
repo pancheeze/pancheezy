@@ -57,7 +57,7 @@ const EDGE_SOFT = 28;
 
 // Facts typed into the log, one per click on the portrait.
 const FACTS: [string, string][] = [
-  ["whoami", `${profile.name.toLowerCase().replace(/\s+/g, "_")} · BSIT @ ${profile.universityShort}`],
+  ["whoami", `${profile.name.toLowerCase().replace(/\s+/g, "_")} · full-stack dev · BSIT @ ${profile.universityShort}`],
   ["focus", "mobile apps · machine learning · web"],
   ["learning", "C++ (deep dive)"],
   ["projects", "ChickDetect · Motoshapi"],
@@ -765,7 +765,7 @@ function TerminalLog({
   return (
     <div aria-live="off" className="mt-1 w-full font-mono text-[9.5px] leading-relaxed tracking-wide sm:text-[10.5px]">
       {lines.map((line, i) => (
-        <div key={i} className="whitespace-pre">
+        <div key={i} className="whitespace-pre-wrap break-words">
           {/* Type each line out character by character from the moment it appears. */}
           <TypedSegments segments={line.segments} typed={Math.floor((t - line.at) / TYPE_MS)} />
           {i === lines.length - 1 && !fact && <Cursor />}
@@ -774,11 +774,11 @@ function TerminalLog({
       {/* Reserved lines for the latest click fact and photo reveal, so the layout never shifts. */}
       {done && (
         <>
-          <div className="min-h-[1.625em] whitespace-pre">
+          <div className="min-h-[1.625em] whitespace-pre-wrap break-words">
             {fact && <TypedSegments segments={fact.segments} typed={fact.typed} />}
             {fact && !revealShown && <Cursor />}
           </div>
-          <div className="min-h-[1.625em] whitespace-pre">
+          <div className="min-h-[1.625em] whitespace-pre-wrap break-words">
             {revealShown && (
               <>
                 <TypedSegments segments={reveal.segments} typed={reveal.typed} />

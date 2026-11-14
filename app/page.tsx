@@ -9,7 +9,7 @@ import Certificates from "@/components/sections/Certificates";
 import Contact from "@/components/sections/Contact";
 
 export const metadata: Metadata = {
-  title: "Paul Pancho — BS Information Technology Student & Web Developer",
+  title: "Paul Anthony Pancho — Full-Stack Developer & BSIT Student",
 };
 
 export default function HomePage() {

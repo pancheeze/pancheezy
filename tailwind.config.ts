@@ -49,6 +49,8 @@ const config: Config = {
         ],
         display: ["Source Code Pro", "ui-monospace", "monospace"],
         mono: ["Source Code Pro", "ui-monospace", "monospace"],
+        // Pixel font used only for the name in the hero heading.
+        pixel: ["Pixelify Sans", "Source Code Pro", "monospace"],
       },
       backgroundImage: {
         "grid-pattern":

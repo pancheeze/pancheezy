@@ -12,26 +12,27 @@ const siteUrl = "https://TODO-your-domain.vercel.app";
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: `${profile.name} — BS Information Technology Student & Web Developer`,
+    default: `${profile.name} — Full-Stack Developer & BSIT Student`,
     template: `%s | ${profile.name}`,
   },
   description: profile.heroDescription,
   keywords: [
-    "Paul Pancho",
+    "Paul Anthony Pancho",
+    "Full-Stack Developer",
     "BS Information Technology Student",
-    "UINSA Surabaya",
+    "Polytechnic University of the Philippines",
+    "PHP",
+    "MySQL",
     "Web Developer",
-    "Mobile Developer",
-    "Flutter Developer",
     "Portfolio",
   ],
   authors: [{ name: profile.name, url: siteUrl }],
   creator: profile.name,
   openGraph: {
     type: "website",
-    locale: "id_ID",
+    locale: "en_US",
     url: siteUrl,
-    title: `${profile.name} — BS Information Technology Student & Web Developer`,
+    title: `${profile.name} — Full-Stack Developer & BSIT Student`,
     description: profile.heroDescription,
     siteName: profile.name,
     images: [
@@ -45,7 +46,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: `${profile.name} — BS Information Technology Student & Web Developer`,
+    title: `${profile.name} — Full-Stack Developer & BSIT Student`,
     description: profile.heroDescription,
     images: ["/images/og-image.svg"],
   },
@@ -80,7 +81,7 @@ export default function RootLayout({
         />
         {/* eslint-disable-next-line @next/next/no-page-custom-font */}
         <link
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Source+Code+Pro:wght@400;500;600;700&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Source+Code+Pro:wght@400;500;600;700&family=Pixelify+Sans:wght@700&display=swap"
           rel="stylesheet"
         />
       </head>

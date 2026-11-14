@@ -11,6 +11,6 @@
   <rect width="800" height="600" fill="#080A0D"/>
   <rect width="800" height="600" fill="url(#g)" opacity="0.35"/>
   <rect width="800" height="600" fill="url(#grid)"/>
-  <text x="50%" y="47%" text-anchor="middle" font-family="Inter, sans-serif" font-size="42" font-weight="700" fill="#FFFFFF">Paul Pancho</text>
-  <text x="50%" y="56%" text-anchor="middle" font-family="Inter, sans-serif" font-size="18" fill="#98A2AB">BS Information Technology Student</text>
+  <text x="50%" y="47%" text-anchor="middle" font-family="Inter, sans-serif" font-size="42" font-weight="700" fill="#FFFFFF">Paul Anthony Pancho</text>
+  <text x="50%" y="56%" text-anchor="middle" font-family="Inter, sans-serif" font-size="18" fill="#98A2AB">Full-Stack Developer · BSIT @ PUP</text>
 </svg>

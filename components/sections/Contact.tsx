@@ -2,7 +2,7 @@
 
 import { useState, FormEvent } from "react";
 import { motion } from "framer-motion";
-import { Mail, Github, Linkedin, Send, CheckCircle2 } from "lucide-react";
+import { Mail, Github, Linkedin, Facebook, Send, CheckCircle2 } from "lucide-react";
 import SectionHeading from "@/components/ui/SectionHeading";
 import { profile } from "@/lib/data";
 import { fadeUp, staggerContainer } from "@/lib/utils";
@@ -26,6 +26,7 @@ export default function Contact() {
     { icon: Mail, label: "Email", value: profile.email, href: `mailto:${profile.email}` },
     { icon: Github, label: "GitHub", value: profile.githubHandle, href: profile.github },
     { icon: Linkedin, label: "LinkedIn", value: profile.name, href: profile.linkedin },
+    { icon: Facebook, label: "Facebook", value: profile.name, href: profile.facebook },
   ];
 
   const fields = [

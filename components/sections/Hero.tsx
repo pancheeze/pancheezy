@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Download, Github, Linkedin, Mail, ArrowDown } from "lucide-react";
+import { Download, Facebook, Github, Linkedin, Mail, ArrowDown } from "lucide-react";
 import LanyardCard from "@/components/ui/LanyardCard";
 import { profile } from "@/lib/data";
 import { scrollToSection, EASE } from "@/lib/utils";
@@ -39,7 +39,7 @@ export default function Hero() {
               className="text-4xl font-extrabold leading-[1.1] tracking-tight sm:text-5xl lg:text-6xl"
             >
               Hi, I&apos;m{" "}
-              <span className="gradient-text">{profile.name}</span>
+              <span className="gradient-text font-pixel font-bold">{profile.name}</span>
             </motion.h1>
 
             <motion.p
@@ -61,16 +61,19 @@ export default function Hero() {
               variants={heroItem}
               className="mt-9 flex flex-wrap items-center justify-center gap-3 lg:justify-start"
             >
-            <motion.a
-              href={profile.cvUrl}
-              download
-              whileHover={{ scale: 1.04, y: -2 }}
-              whileTap={{ scale: 0.96 }}
-              className="btn-primary"
-            >
-              <Download size={16} />
-              Download CV
-            </motion.a>
+            {/* Only shown once a CV file is set in lib/data.ts. */}
+            {profile.cvUrl && (
+              <motion.a
+                href={profile.cvUrl}
+                download
+                whileHover={{ scale: 1.04, y: -2 }}
+                whileTap={{ scale: 0.96 }}
+                className="btn-primary"
+              >
+                <Download size={16} />
+                Download CV
+              </motion.a>
+            )}
 
             <motion.a
               href={profile.github}
@@ -94,6 +97,18 @@ export default function Hero() {
             >
               <Linkedin size={16} />
               LinkedIn
+            </motion.a>
+
+            <motion.a
+              href={profile.facebook}
+              target="_blank"
+              rel="noreferrer"
+              whileHover={{ scale: 1.04, y: -2 }}
+              whileTap={{ scale: 0.96 }}
+              className="btn-ghost"
+            >
+              <Facebook size={16} />
+              Facebook
             </motion.a>
 
             <motion.button

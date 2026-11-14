@@ -1,48 +1,66 @@
 import { Certificate, Project, Skill, TimelineItem } from "./types";
 
-// TODO: fill in every field marked TODO with your real details.
+// TODO: fill in the remaining fields marked TODO with your real details.
 export const profile = {
-  name: "Paul Pancho",
-  title: "BS Information Technology Student",
+  name: "Paul Anthony Pancho",
+  title: "Full-Stack Developer",
   university: "Polytechnic University of the Philippines",
   universityShort: "PUP",
   degree: "BS Information Technology",
-  start: "TODO: e.g. 2023 - Present",
-  background: "TODO: Senior high school name",
-  major: "TODO: Strand, e.g. ICT / STEM",
-  email: "TODO@example.com",
-  github: "https://github.com/TODO",
-  githubHandle: "@TODO",
-  linkedin: "https://www.linkedin.com/in/TODO",
-  cvUrl: "/cv/Paul-Pancho-CV.pdf",
+  location: "Philippines",
+  // Empty fields are hidden on the site until they are filled in.
+  start: "", // TODO: e.g. "2023 - Present"
+  background: "", // TODO: senior high school name
+  major: "", // TODO: strand, e.g. "ICT" or "STEM"
+  email: "paulanthonybucadpancho1122@gmail.com",
+  github: "https://github.com/pancheeze",
+  githubHandle: "@pancheeze",
+  linkedin: "https://www.linkedin.com/in/paul-pancho-76b8103a5/",
+  facebook: "https://www.facebook.com/share/1DwHRaC69i/",
+  // Put the PDF in public/cv/ and set the path here; the Download CV button only shows when set.
+  cvUrl: "",
   heroDescription:
-    "BS Information Technology student at the Polytechnic University of the Philippines, building things for the web.",
-  aboutDescription:
-    "TODO: 2 to 4 sentences about who you are, what you build, and what you're looking for.",
+    "BSIT student at the Polytechnic University of the Philippines building full-stack web and mobile apps that solve real problems — from the database to the interface people use.",
+  aboutDescription: [
+    "I'm Paul, an IT student at PUP and a full-stack developer who likes owning an idea end to end: designing the database, writing the backend logic and APIs, and shipping a clean, responsive interface on top.",
+    "Most of my work is in PHP, MySQL and JavaScript, with C and C++ for the problem-solving side. Right now I'm building ChickDetect and going deep on C++. I'm open to internships and to collaborating on projects that ship something useful.",
+  ],
+  // Short key/value lines shown in the About section.
+  quickFacts: [
+    ["currently", "building ChickDetect"],
+    ["learning", "C++ (deep dive)"],
+    ["stack", "PHP · MySQL · JavaScript"],
+    ["open_to", "internships & collaborations"],
+  ] as [string, string][],
   interests: [
-    "Web Development",
-    "Frontend Development",
+    "Full-Stack Web Development",
+    "Mobile Apps",
+    "Machine Learning",
     "UI Design",
-    "TODO: add or remove interests",
   ],
 };
 
 export const skills: Skill[] = [
   { name: "JavaScript", category: "Programming" },
+  { name: "C", category: "Programming" },
+  { name: "C++", category: "Programming" },
   { name: "HTML", category: "Frontend" },
   { name: "CSS", category: "Frontend" },
   { name: "Bootstrap", category: "Frontend" },
+  { name: "PHP", category: "Backend" },
   { name: "REST APIs", category: "Backend" },
+  { name: "MySQL", category: "Database" },
   { name: "Git", category: "Tools" },
   { name: "GitHub", category: "Tools" },
   { name: "Photoshop", category: "Tools" },
 ];
 
-// Each entry becomes a filter tab; also available: "Mobile", "Database", "AI".
+// Each entry becomes a filter tab; also available: "Mobile", "AI".
 export const skillCategories = [
   "Programming",
   "Frontend",
   "Backend",
+  "Database",
   "Tools",
 ] as const;
 

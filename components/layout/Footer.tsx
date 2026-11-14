@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Github, Linkedin, Mail, ArrowUp } from "lucide-react";
+import { Facebook, Github, Linkedin, Mail, ArrowUp } from "lucide-react";
 import { profile } from "@/lib/data";
 
 export default function Footer() {
@@ -14,6 +14,7 @@ export default function Footer() {
   const socials = [
     { icon: Github, href: profile.github, label: "GitHub" },
     { icon: Linkedin, href: profile.linkedin, label: "LinkedIn" },
+    { icon: Facebook, href: profile.facebook, label: "Facebook" },
     { icon: Mail, href: `mailto:${profile.email}`, label: "Email" },
   ];
 
