@@ -71,7 +71,7 @@ export default function ProjectDetailView({ project }: { project: Project }) {
             {project.demo && (
               <a href={project.demo} target="_blank" rel="noreferrer" className="btn-primary">
                 <ExternalLink size={16} />
-                Live Demo
+                {project.demoLabel ?? "Live Demo"}
               </a>
             )}
           </motion.div>

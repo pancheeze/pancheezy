@@ -13,7 +13,7 @@ export default function Projects() {
         <SectionHeading
           eyebrow="Selected work"
           title="Projects"
-          description="A few things I have built for the web."
+          description="A few things I've built, from web apps to games."
         />
 
         <motion.div

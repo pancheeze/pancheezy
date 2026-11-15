@@ -20,6 +20,8 @@ export interface Project {
   tech: string[];
   github?: string;
   demo?: string;
+  /** Button text for the demo link; defaults to "Live Demo". */
+  demoLabel?: string;
   thumbnail: string;
   detail: {
     overview: string;

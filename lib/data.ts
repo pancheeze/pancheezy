@@ -82,6 +82,56 @@ export const skillCategories = [
 
 export const projects: Project[] = [
   {
+    slug: "swish-streak",
+    name: "Swish Streak",
+    description:
+      "A 3D low-poly basketball game on a floating island court: time your shot with the meter, chain makes, and watch your streak multiply your score.",
+    category: "3D Game · Unity",
+    tech: ["Unity 6", "C#", "TextMesh Pro"],
+    github: undefined,
+    demo: "https://pancheeze.itch.io/swish-streak",
+    demoLabel: "Download on itch.io",
+    thumbnail: "/images/projects/swish-streak-1.png",
+    detail: {
+      overview:
+        "My solo final project from last semester. A low-poly basketball court floating in space, where every shot is a timing challenge.",
+      problem:
+        "Most simple shooting games feel random. I wanted shots that reward skill and timing, so players can feel themselves improving.",
+      solution:
+        "A shot meter that cycles while you aim. Release quality decides a clean make, a rim-rattling make or an airball, and changes the ball's arc and landing spot. Consecutive makes build a streak that multiplies your score.",
+      features: [
+        "Timing-based shot meter: clean make, rattle-in or airball",
+        "Shot quality changes the ball's arc and accuracy; misses clank off the rim with real physics",
+        "Streak scoring: the nth make in a row is worth n points, and an airball resets it",
+        "Balls spawn every few seconds (up to 10 on court), and you pick them up by walking into them",
+        "Grounded balls despawn after 3 seconds unless you grab them",
+        "Low-poly floating island scene with a space skybox and a pixel-style UI font",
+      ],
+      stack: ["Unity 6", "C#", "Unity Physics", "TextMesh Pro", "Unity Asset Store models"],
+      process: [
+        "Designed the core loop: dribble, aim, time, shoot, rebound",
+        "Built character movement with Unity's CharacterController",
+        "Scripted the shot meter, arc trajectory and physics handoff",
+        "Added streak scoring and the score UI",
+        "Built the ball spawner and despawn system",
+        "Designed the floating-island scene and visuals",
+        "Playtested and tuned the meter speed and shot difficulty",
+      ],
+      challenges: [
+        "Making misses look believable: blending a scripted arc into real physics so the ball bounces off the rim naturally",
+        "Keeping the meter learnable by restarting it from the same point every time you aim",
+        "Stopping a ball from despawning while it's in the player's hands",
+      ],
+      gallery: [
+        "/images/projects/swish-streak-2.png",
+        "/images/projects/swish-streak-3.png",
+        "/images/projects/swish-streak-4.png",
+      ],
+      result:
+        "A complete, playable game published on itch.io. Designed and built solo, with the gameplay code written with AI assistance.",
+    },
+  },
+  {
     slug: "mineventory",
     name: "MineVentory",
     description:

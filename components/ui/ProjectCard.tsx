@@ -68,7 +68,7 @@ export default function ProjectCard({ project, index }: { project: Project; inde
               href={project.demo}
               target="_blank"
               rel="noreferrer"
-              aria-label={`${project.name} live demo`}
+              aria-label={`${project.name}: ${project.demoLabel ?? "live demo"}`}
               className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 text-text-secondary transition-colors hover:border-white/30 hover:text-white"
             >
               <ExternalLink size={15} />
