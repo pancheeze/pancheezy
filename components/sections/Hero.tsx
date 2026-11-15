@@ -45,7 +45,7 @@ export default function Hero() {
 
             <motion.p
               variants={heroItem}
-              className="mt-5 min-h-[1.75em] text-lg font-medium text-secondary sm:text-xl"
+              className="mt-5 min-h-[3.5em] text-sm font-medium sm:min-h-[1.75em] sm:text-base lg:text-lg"
             >
               <Typewriter words={profile.taglines} />
             </motion.p>
