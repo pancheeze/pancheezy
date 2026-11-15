@@ -60,7 +60,7 @@ const FACTS: [string, string][] = [
   ["whoami", `${profile.name.toLowerCase().replace(/\s+/g, "_")} · full-stack dev · BSIT @ ${profile.universityShort}`],
   ["focus", "mobile apps · machine learning · web"],
   ["learning", "C++ (deep dive)"],
-  ["projects", "ChickDetect · Motoshapi"],
+  ["projects", "ChickDetect (capstone, lead programmer) · Motoshapi"],
   ["open_to", "collaborating on code projects"],
 ];
 

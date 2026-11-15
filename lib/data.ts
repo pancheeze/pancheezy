@@ -24,9 +24,9 @@ export const profile = {
   degree: "BS Information Technology",
   location: "Philippines",
   // Empty fields are hidden on the site until they are filled in.
-  start: "", // TODO: e.g. "2023 - Present"
-  background: "", // TODO: senior high school name
-  major: "", // TODO: strand, e.g. "ICT" or "STEM"
+  start: "2023 – Present",
+  background: "Tanauan Institute",
+  major: "STEM · Consistent honor student",
   email: "paulanthonybucadpancho1122@gmail.com",
   github: "https://github.com/pancheeze",
   githubHandle: "@pancheeze",
@@ -38,7 +38,7 @@ export const profile = {
     "BSIT student at the Polytechnic University of the Philippines building full-stack web and mobile apps that solve real problems — from the database to the interface people use.",
   aboutDescription: [
     "I'm Paul, an IT student at PUP and a full-stack developer who likes owning an idea end to end: designing the database, writing the backend logic and APIs, and shipping a clean, responsive interface on top.",
-    "Most of my work is in PHP, MySQL and JavaScript, with C and C++ for the problem-solving side. Right now I'm building ChickDetect and going deep on C++. I'm open to internships and to collaborating on projects that ship something useful.",
+    "Most of my work is in PHP, MySQL and JavaScript, with C and C++ for the problem-solving side. Right now I'm lead programmer on our capstone, ChickDetect, a machine-learning app that scans chickens for signs of illness, and going deep on C++. I'm open to internships and to collaborating on projects that ship something useful.",
   ],
   // Short key/value lines shown in the About section.
   quickFacts: [
@@ -46,6 +46,7 @@ export const profile = {
     ["learning", "C++ (deep dive)"],
     ["stack", "PHP · MySQL · JavaScript"],
     ["open_to", "internships & collaborations"],
+    ["honors", "President's Lister (since 1st year)"],
   ] as [string, string][],
   interests: [
     "Full-Stack Web Development",
@@ -163,20 +164,33 @@ export const timeline: TimelineItem[] = [
   {
     id: "senior-high",
     icon: "graduation",
-    period: "TODO: years",
-    title: "TODO: Strand",
-    org: "TODO: Senior high school",
-    description: "TODO: what you studied or did there.",
-    skills: ["TODO"],
+    period: "2021 – 2023",
+    title: "STEM Strand",
+    org: "Tanauan Institute",
+    description:
+      "Built my foundation in mathematics, science and research, and was a consistent honor student from Grade 11 onward.",
+    skills: ["Mathematics", "Research", "Problem Solving"],
   },
   {
     id: "pup",
     icon: "university",
-    period: "TODO: e.g. 2023 - Present",
+    period: "2023 – Present",
+    duration: "4th Year",
     title: "BS Information Technology Student",
     org: "Polytechnic University of the Philippines",
-    description: "TODO: your focus areas, organizations, or achievements.",
-    skills: ["Web Development", "TODO"],
+    description:
+      "Full-stack developer focused on machine learning. Lead programmer of our capstone project, ChickDetect, which trains models on AI-assisted datasets to scan chickens for signs of illness. Consistent President's Lister since first year.",
+    skills: ["Machine Learning", "Full-Stack", "PHP", "MySQL"],
+  },
+  {
+    id: "the-searcher",
+    icon: "briefcase",
+    period: "2025 – Present",
+    title: "Chief Illustrator",
+    org: "The Searcher · PUP student publication",
+    description:
+      "Lead the publication's illustration work, creating the artwork that accompanies its stories and issues.",
+    skills: ["Illustration", "Visual Design", "Visual Storytelling"],
   },
 ];
 
