@@ -91,7 +91,7 @@ export const projects: Project[] = [
     github: "https://github.com/pancheeze/ChickDetect",
     demo: "https://pancheeze.github.io/ChickDetect/",
     demoLabel: "Visit Website",
-    thumbnail: "/images/projects/chickdetect-1.jpg",
+    thumbnail: "/images/projects/chickdetect-scan.jpg",
     detail: {
       overview:
         "Our capstone project, where I'm lead programmer. Farmers photograph a dropping, and the app classifies it on the device as healthy, coccidiosis, salmonella or Newcastle disease, then gives plain-language advice and vet contacts.",
@@ -121,9 +121,9 @@ export const projects: Project[] = [
         "Running inference fast and fully offline on low-end Android phones",
       ],
       gallery: [
-        "/images/projects/chickdetect-2.jpg",
-        "/images/projects/chickdetect-3.jpg",
-        "/images/projects/chickdetect-4.jpg",
+        "/images/projects/chickdetect-welcome.jpg",
+        "/images/projects/chickdetect-result.jpg",
+        "/images/projects/chickdetect-advice.jpg",
       ],
       result:
         "The v2 model reaches 96.56% test accuracy across 5 classes. A team capstone: I led programming and built the original app, and the v2 redesign and website were done with my groupmate.",
