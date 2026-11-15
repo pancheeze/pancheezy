@@ -109,6 +109,19 @@ body::-webkit-scrollbar {
   }
 }
 
+.typewriter-cursor {
+  display: inline-block;
+  margin-left: 0.1em;
+  color: #ECA35F;
+  animation: typewriter-blink 1s steps(1) infinite;
+}
+
+@keyframes typewriter-blink {
+  50% {
+    opacity: 0;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

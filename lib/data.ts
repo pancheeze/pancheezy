@@ -4,6 +4,14 @@ import { Certificate, Project, Skill, TimelineItem } from "./types";
 export const profile = {
   name: "Paul Anthony Pancho",
   title: "Full-Stack Developer",
+  // Rotating typewriter phrases shown under the name in the hero.
+  taglines: [
+    "Full-Stack Developer",
+    "BSIT Student @ PUP",
+    "PHP & MySQL Builder",
+    "C++ Enthusiast",
+    "Currently building ChickDetect",
+  ],
   university: "Polytechnic University of the Philippines",
   universityShort: "PUP",
   degree: "BS Information Technology",

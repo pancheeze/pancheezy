@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { Download, Facebook, Github, Linkedin, Mail, ArrowDown } from "lucide-react";
 import LanyardCard from "@/components/ui/LanyardCard";
+import Typewriter from "@/components/ui/Typewriter";
 import { profile } from "@/lib/data";
 import { scrollToSection, EASE } from "@/lib/utils";
 
@@ -44,9 +45,9 @@ export default function Hero() {
 
             <motion.p
               variants={heroItem}
-              className="mt-5 text-lg font-medium text-secondary sm:text-xl"
+              className="mt-5 min-h-[1.75em] text-lg font-medium text-secondary sm:text-xl"
             >
-              {profile.title}
+              <Typewriter words={profile.taglines} />
             </motion.p>
 
             <motion.p
