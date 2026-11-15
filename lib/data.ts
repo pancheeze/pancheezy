@@ -186,8 +186,7 @@ export const projects: Project[] = [
     category: "Web Application",
     tech: ["HTML", "CSS", "JavaScript", "Bootstrap", "REST API"],
     github: "https://github.com/pancheeze/mineventory_api",
-    // The third-party Minecraft API is down, so the live site shows no items; add the demo link back once it works.
-    demo: undefined,
+    demo: "https://pancheeze.github.io/mineventory_api/",
     thumbnail: "/images/projects/mineventory.png",
     detail: {
       overview:
@@ -202,6 +201,7 @@ export const projects: Project[] = [
         "Filter chips for item families (blocks, tools, food, and more)",
         "Item cards with icon and ID, with a detail pop-up for each item",
         "Loading states while the data arrives",
+        "Falls back to a saved copy of the item list when the API is down, so the catalog always works",
       ],
       stack: ["HTML", "CSS", "JavaScript", "Bootstrap 5", "Fetch API", "REST API"],
       process: [
@@ -212,13 +212,13 @@ export const projects: Project[] = [
         "Styled the pixel-art theme and made it responsive",
       ],
       challenges: [
-        "Items sometimes didn't show up when the API failed to respond, so the page needed clear loading and error states",
-        "Broken item images appeared when an icon was missing from the API",
+        "Items stopped showing when the API went down, so I added a timeout and a fallback to a saved copy of the data",
+        "Broken item images appeared when an icon failed to load, so missing icons now fall back to a placeholder",
         "Keeping search and filtering fast across more than a thousand items",
       ],
       gallery: ["/images/projects/mineventory.png"],
       result:
-        "A working item catalog built on a live API, and my first real lesson in depending on outside services: when the API goes down, the app has to handle it gracefully.",
+        "A working item catalog built on a live API, and my first real lesson in depending on outside services: when the API went down, I made the app fall back to saved data so it keeps working.",
     },
   },
   {
