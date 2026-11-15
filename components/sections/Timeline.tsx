@@ -1,7 +1,7 @@
 "use client";
 
-import { useRef } from "react";
-import { motion, useScroll, useSpring } from "framer-motion";
+import { useEffect, useRef, useState } from "react";
+import { motion, useReducedMotion, useScroll, useSpring, useTransform, type MotionValue } from "framer-motion";
 import { Briefcase, GraduationCap, Building2 } from "lucide-react";
 import SectionHeading from "@/components/ui/SectionHeading";
 import { timeline } from "@/lib/data";
@@ -13,16 +13,80 @@ const icons = {
   university: Building2,
 };
 
+// The tip of the growing line is a short column of scrambling glyphs (same set as DecryptText);
+// above it the "decrypted" part is the solid gradient line.
+const HEAD = 72; // px
+const HEAD_GLYPHS = 8;
+const GLYPHS = "!<>-_\\/[]{}=+*^?#%&$@01";
+const randomGlyph = () => GLYPHS[Math.floor(Math.random() * GLYPHS.length)];
+// Head length at progress v: full while drawing, shrinking to 0 over the last 10% so the solid
+// line finishes all the way down.
+const headLength = (v: number) => HEAD * Math.min(1, Math.max(0, (1 - v) / 0.1));
+
+function DecryptingHead({ progress }: { progress: MotionValue<number> }) {
+  // Fixed first render so server and client markup match; scrambling starts on the client.
+  const [glyphs, setGlyphs] = useState(() => Array.from({ length: HEAD_GLYPHS }, () => "0"));
+
+  useEffect(() => {
+    let timer: ReturnType<typeof setInterval> | undefined;
+    let idle: ReturnType<typeof setTimeout> | undefined;
+    const tick = () => setGlyphs(Array.from({ length: HEAD_GLYPHS }, randomGlyph));
+    // Scramble only while the line is moving; it pauses shortly after scrolling stops.
+    const unsubscribe = progress.on("change", () => {
+      if (!timer) timer = setInterval(tick, 70);
+      clearTimeout(idle);
+      idle = setTimeout(() => {
+        clearInterval(timer);
+        timer = undefined;
+      }, 350);
+    });
+    return () => {
+      unsubscribe();
+      clearInterval(timer);
+      clearTimeout(idle);
+    };
+  }, [progress]);
+
+  // Sits just below the solid line; shrinks near the start so it never pokes above the timeline.
+  const top = useTransform(progress, (v) => `max(0px, calc(${v * 100}% - ${headLength(v)}px))`);
+  const height = useTransform(progress, (v) => `min(${headLength(v)}px, ${v * 100}%)`);
+  const opacity = useTransform(progress, [0, 0.02], [0, 1]);
+
+  return (
+    <motion.div
+      aria-hidden
+      style={{ top, height, opacity }}
+      className="pointer-events-none absolute left-5 flex w-3 -translate-x-1/2 flex-col items-center justify-end overflow-hidden font-mono text-[11px] font-bold leading-[9px] sm:left-1/2"
+    >
+      {glyphs.map((g, i) => (
+        <span
+          key={i}
+          // Dim where the glyphs settle into the line, brightest at the leading tip.
+          style={{ opacity: 0.3 + (0.7 * (i + 1)) / HEAD_GLYPHS }}
+          className={i === HEAD_GLYPHS - 1 ? "text-primary" : "text-secondary"}
+        >
+          {g}
+        </span>
+      ))}
+    </motion.div>
+  );
+}
+
 export default function Timeline() {
   const containerRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({
     target: containerRef,
     offset: ["start 80%", "end 60%"],
   });
-  const lineHeight = useSpring(scrollYProgress, {
+  const lineProgress = useSpring(scrollYProgress, {
     stiffness: 90,
     damping: 24,
   });
+  const reduceMotion = useReducedMotion();
+  // The solid line stops where the decrypting head begins (reduced motion: plain line, no head).
+  const solidHeight = useTransform(lineProgress, (v) =>
+    reduceMotion ? `${v * 100}%` : `max(0px, calc(${v * 100}% - ${headLength(v)}px))`,
+  );
 
   return (
     <section id="journey" className="section-padding relative">
@@ -36,9 +100,10 @@ export default function Timeline() {
         <div ref={containerRef} className="relative mx-auto max-w-3xl">
           <div className="absolute left-5 top-0 h-full w-px bg-white/10 sm:left-1/2 sm:-translate-x-1/2" />
           <motion.div
-            style={{ scaleY: lineHeight }}
-            className="absolute left-5 top-0 h-full w-px origin-top bg-[linear-gradient(180deg,#ECA35F,#7FA88B,#7AA5C4)] sm:left-1/2 sm:-translate-x-1/2"
+            style={{ height: solidHeight }}
+            className="absolute left-5 top-0 w-px bg-[linear-gradient(180deg,#ECA35F,#7FA88B,#7AA5C4)] sm:left-1/2 sm:-translate-x-1/2"
           />
+          {!reduceMotion && <DecryptingHead progress={lineProgress} />}
 
           <div className="flex flex-col gap-14">
             {timeline.map((item, index) => {
