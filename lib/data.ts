@@ -4,16 +4,20 @@ import { Certificate, Project, Skill, TimelineItem } from "./types";
 export const profile = {
   name: "Paul Anthony Pancho",
   title: "Full-Stack Developer",
-  // Rotating "code" taglines in the hero. Written as plain strings and
-  // syntax-highlighted automatically: "strings", fn(), // comments, <Tags />.
+  // Hero line: "> Working as a <role>" where the role decrypts into the next one.
+  taglinePrefix: "Working as a",
   taglines: [
-    "<FullStackDeveloper />",
-    "artist.draw({ traditional, digital })",
-    'photoshop.edit("photos", "posters")',
-    "while (alive) { code(); create(); }",
-    'cpp.learn("deeper") // C++',
-    'build("ChickDetect")',
-    "student @ PUP // BSIT",
+    "Full-Stack Developer",
+    "Frontend Developer",
+    "Backend Developer",
+    "Web Developer",
+    "Mobile App Developer",
+    "PHP & MySQL Developer",
+    "UI/UX Designer",
+    "C++ Problem Solver",
+    "Traditional & Digital Artist",
+    "Photoshop Editor",
+    "BSIT Student at PUP",
   ],
   university: "Polytechnic University of the Philippines",
   universityShort: "PUP",

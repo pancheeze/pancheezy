@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import { Download, Facebook, Github, Linkedin, Mail, ArrowDown } from "lucide-react";
 import LanyardCard from "@/components/ui/LanyardCard";
-import Typewriter from "@/components/ui/Typewriter";
+import DecryptText from "@/components/ui/DecryptText";
 import { profile } from "@/lib/data";
 import { scrollToSection, EASE } from "@/lib/utils";
 
@@ -45,9 +45,14 @@ export default function Hero() {
 
             <motion.p
               variants={heroItem}
-              className="mt-5 min-h-[3.5em] text-sm font-medium sm:min-h-[1.75em] sm:text-base lg:text-lg"
+              className="mt-5 min-h-[3.5em] font-mono text-base font-medium sm:min-h-[1.75em] sm:text-lg lg:text-xl"
             >
-              <Typewriter words={profile.taglines} />
+              <span className="text-primary">&gt;</span>{" "}
+              <span className="text-white">{profile.taglinePrefix}</span>{" "}
+              <span className="block sm:inline">
+                <DecryptText words={profile.taglines} className="font-bold text-primary" />
+                <span className="typewriter-cursor">▋</span>
+              </span>
             </motion.p>
 
             <motion.p
