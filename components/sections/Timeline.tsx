@@ -1,7 +1,15 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { motion, useReducedMotion, useScroll, useSpring, useTransform, type MotionValue } from "framer-motion";
+import {
+  motion,
+  useInView,
+  useReducedMotion,
+  useScroll,
+  useSpring,
+  useTransform,
+  type MotionValue,
+} from "framer-motion";
 import { Briefcase, GraduationCap, Building2 } from "lucide-react";
 import SectionHeading from "@/components/ui/SectionHeading";
 import { timeline } from "@/lib/data";
@@ -22,6 +30,81 @@ const randomGlyph = () => GLYPHS[Math.floor(Math.random() * GLYPHS.length)];
 // Head length at progress v: full while drawing, shrinking to 0 over the last 10% so the solid
 // line finishes all the way down.
 const headLength = (v: number) => HEAD * Math.min(1, Math.max(0, (1 - v) / 0.1));
+
+// Faint glyphs that rise and fade beside the drawn part of the line, like the runes around the
+// hero portrait. Positions and timings are fixed per index so server and client markup match.
+const RUNE_COUNT = 12;
+const runeSpecs = Array.from({ length: RUNE_COUNT }, (_, i) => {
+  // Rounded so server and browser always produce identical style values.
+  const r = (k: number) => Math.round((((Math.sin((i + 1) * 12.9898 + k * 78.233) * 43758.5453) % 1 + 1) % 1) * 1000) / 1000;
+  return {
+    top: ((i + 0.5) / RUNE_COUNT) * 100 + (r(1) - 0.5) * 6, // % down the timeline
+    dx: (r(2) < 0.5 ? -1 : 1) * (8 + r(3) * 16), // px left or right of the line
+    duration: 3.5 + r(4) * 2.5, // s per rise
+    delay: r(5) * 4, // s
+    peak: 0.25 + r(6) * 0.2, // max opacity
+    glyph: GLYPHS[Math.floor(r(7) * GLYPHS.length)],
+  };
+});
+
+function Rune({ spec, active }: { spec: (typeof runeSpecs)[number]; active: boolean }) {
+  const [glyph, setGlyph] = useState(spec.glyph);
+
+  useEffect(() => {
+    if (!active) return;
+    // A fresh glyph each rise, swapped at the start of the cycle while it is invisible.
+    let interval: ReturnType<typeof setInterval> | undefined;
+    const start = setTimeout(() => {
+      interval = setInterval(() => setGlyph(randomGlyph()), spec.duration * 1000);
+    }, spec.delay * 1000);
+    return () => {
+      clearTimeout(start);
+      clearInterval(interval);
+    };
+  }, [active, spec]);
+
+  return (
+    <motion.span
+      className="absolute font-mono text-[11px] text-accent"
+      style={{ top: `${spec.top}%`, left: `calc(50% + ${spec.dx}px)` }}
+      initial={{ opacity: 0, y: 0 }}
+      animate={
+        active
+          ? { opacity: [0, spec.peak, 0], y: [0, -26] }
+          : { opacity: 0, y: 0 }
+      }
+      transition={
+        active
+          ? {
+              duration: spec.duration,
+              delay: spec.delay,
+              repeat: Infinity,
+              ease: "easeInOut",
+              opacity: { duration: spec.duration, delay: spec.delay, repeat: Infinity, times: [0, 0.5, 1] },
+            }
+          : { duration: 0.3 }
+      }
+    >
+      {glyph}
+    </motion.span>
+  );
+}
+
+function DriftingRunes({ progress, active }: { progress: MotionValue<number>; active: boolean }) {
+  // Clipped to the part of the line that has already been drawn.
+  const clipPath = useTransform(progress, (v) => `inset(0 0 ${Math.max(0, (1 - v) * 100)}% 0)`);
+  return (
+    <motion.div
+      aria-hidden
+      style={{ clipPath }}
+      className="pointer-events-none absolute left-5 top-0 h-full w-16 -translate-x-1/2 sm:left-1/2"
+    >
+      {runeSpecs.map((spec, i) => (
+        <Rune key={i} spec={spec} active={active} />
+      ))}
+    </motion.div>
+  );
+}
 
 function DecryptingHead({ progress }: { progress: MotionValue<number> }) {
   // Fixed first render so server and client markup match; scrambling starts on the client.
@@ -83,6 +166,8 @@ export default function Timeline() {
     damping: 24,
   });
   const reduceMotion = useReducedMotion();
+  // Runes only animate while the timeline is on screen.
+  const inView = useInView(containerRef, { margin: "200px 0px" });
   // The solid line stops where the decrypting head begins (reduced motion: plain line, no head).
   const solidHeight = useTransform(lineProgress, (v) =>
     reduceMotion ? `${v * 100}%` : `max(0px, calc(${v * 100}% - ${headLength(v)}px))`,
@@ -103,6 +188,7 @@ export default function Timeline() {
             style={{ height: solidHeight }}
             className="absolute left-5 top-0 w-px bg-[linear-gradient(180deg,#ECA35F,#7FA88B,#7AA5C4)] sm:left-1/2 sm:-translate-x-1/2"
           />
+          {!reduceMotion && <DriftingRunes progress={lineProgress} active={inView} />}
           {!reduceMotion && <DecryptingHead progress={lineProgress} />}
 
           <div className="flex flex-col gap-14">
