@@ -19,7 +19,7 @@ export const profile = {
     "Photoshop Editor",
     "BSIT Student at PUP",
   ],
-  university: "Polytechnic University of the Philippines",
+  university: "Polytechnic University of the Philippines – Sto. Tomas Campus",
   universityShort: "PUP",
   degree: "BS Information Technology",
   location: "Philippines",
@@ -177,7 +177,7 @@ export const timeline: TimelineItem[] = [
     period: "2023 – Present",
     duration: "4th Year",
     title: "BS Information Technology Student",
-    org: "Polytechnic University of the Philippines",
+    org: "Polytechnic University of the Philippines – Sto. Tomas Campus",
     description:
       "Full-stack developer focused on machine learning. Lead programmer of our capstone project, ChickDetect, which trains models on AI-assisted datasets to scan chickens for signs of illness. Consistent President's Lister since first year.",
     skills: ["Machine Learning", "Full-Stack", "PHP", "MySQL"],
@@ -194,16 +194,17 @@ export const timeline: TimelineItem[] = [
   },
 ];
 
-// TODO: add your certificates. Put images in public/images/certificates/.
+// Add new certificates here; put their images in public/images/certificates/.
 export const certificates: Certificate[] = [
   {
-    id: "cert-1",
-    name: "TODO: Certificate name",
-    institution: "TODO: Issuer",
-    year: "TODO",
-    description: "TODO: what you learned.",
-    skills: ["TODO"],
-    image: "/images/certificates/placeholder.svg",
+    id: "ai-ml-seminar-2025",
+    name: "From Algorithms to Intelligence: The Journey to AI and Machine Learning",
+    institution: "PUP Sto. Tomas Campus · Computer Society",
+    year: "2025",
+    description:
+      "Certificate of Participation for a full-day Computer Society seminar on artificial intelligence and machine learning, held December 5, 2025.",
+    skills: ["Artificial Intelligence", "Machine Learning"],
+    image: "/images/certificates/ai-ml-seminar-2025.jpg",
   },
 ];
 
