@@ -1,7 +1,7 @@
 import { MetadataRoute } from "next";
 import { projects } from "@/lib/data";
 
-const siteUrl = "https://TODO-your-domain.vercel.app";
+const siteUrl = "https://pancheezy.vercel.app";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const projectRoutes = projects.map((project) => ({

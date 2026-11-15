@@ -1,6 +1,5 @@
 import { Certificate, Project, Skill, TimelineItem } from "./types";
 
-// TODO: fill in the remaining fields marked TODO with your real details.
 export const profile = {
   name: "Paul Anthony Pancho",
   title: "Full-Stack Developer",
@@ -185,25 +184,86 @@ export const projects: Project[] = [
     description:
       "A searchable catalog of Minecraft blocks, tools, and items pulled straight from a Minecraft API, with category filters and a pixel-art interface.",
     category: "Web Application",
-    tech: ["HTML", "CSS", "JavaScript", "REST API"],
-    github: undefined, // TODO: repo link
-    demo: undefined, // TODO: live link
+    tech: ["HTML", "CSS", "JavaScript", "Bootstrap", "REST API"],
+    github: "https://github.com/pancheeze/mineventory_api",
+    // The third-party Minecraft API is down, so the live site shows no items; add the demo link back once it works.
+    demo: undefined,
     thumbnail: "/images/projects/mineventory.png",
     detail: {
       overview:
         "MineVentory lets players browse more than a thousand Minecraft items, search by name or ID, and filter by item family.",
-      problem: "TODO: what problem or need did this project address?",
-      solution: "TODO: how did you approach building it?",
+      problem:
+        "Looking up Minecraft items usually means digging through wikis page by page. I wanted one fast, searchable place to browse everything in the game.",
+      solution:
+        "A single-page app that fetches the full item list from a public Minecraft API, then filters it instantly in the browser by name, ID or item family.",
       features: [
-        "Search by item name or ID",
+        "Loads 1,179 items live from a Minecraft REST API",
+        "Instant search by item name or ID",
         "Filter chips for item families (blocks, tools, food, and more)",
-        "Item cards with icon, ID, and description",
+        "Item cards with icon and ID, with a detail pop-up for each item",
+        "Loading states while the data arrives",
       ],
-      stack: ["HTML", "CSS", "JavaScript", "REST API"],
-      process: ["TODO: describe your build steps"],
-      challenges: ["TODO: what was hard and how you solved it"],
+      stack: ["HTML", "CSS", "JavaScript", "Bootstrap 5", "Fetch API", "REST API"],
+      process: [
+        "Explored the Minecraft API and its item data",
+        "Fetched the items with JavaScript and rendered them as cards",
+        "Added search and family filters on the client side",
+        "Built the item detail pop-up with a Bootstrap modal",
+        "Styled the pixel-art theme and made it responsive",
+      ],
+      challenges: [
+        "Items sometimes didn't show up when the API failed to respond, so the page needed clear loading and error states",
+        "Broken item images appeared when an icon was missing from the API",
+        "Keeping search and filtering fast across more than a thousand items",
+      ],
       gallery: ["/images/projects/mineventory.png"],
-      result: "TODO: what you achieved or learned",
+      result:
+        "A working item catalog built on a live API, and my first real lesson in depending on outside services: when the API goes down, the app has to handle it gracefully.",
+    },
+  },
+  {
+    slug: "ireland-showcase",
+    name: "Discover Ireland",
+    description:
+      "A responsive travel showcase for Ireland, with a full-screen hero, featured places, a photo carousel and a gallery, styled with glassmorphism.",
+    category: "Website",
+    tech: ["HTML", "CSS", "Bootstrap", "Bootstrap Icons"],
+    github: "https://github.com/pancheeze/irelandSC",
+    demo: "https://pancheeze.github.io/irelandSC/",
+    thumbnail: "/images/projects/ireland-showcase-1.jpg",
+    detail: {
+      overview:
+        "A one-page tourism site that introduces Ireland's culture, landmarks and scenery, from Dublin to the Cliffs of Moher.",
+      problem:
+        "Travel pages often feel cluttered. I wanted a clean, image-first page that makes a place feel inviting on any screen size.",
+      solution:
+        "A Bootstrap-based layout with a full-screen hero, a frosted-glass navigation bar and cards, and sections that rearrange from four columns on desktop to one on phones.",
+      features: [
+        "Full-screen hero with a call-to-action button",
+        "Glassmorphism (frosted-glass) navigation bar",
+        "Places to Discover cards: Dublin, Cliffs of Moher, Ring of Kerry, Galway",
+        "Photo carousel and image gallery",
+        "Collapsible mobile menu",
+      ],
+      stack: ["HTML", "CSS", "Bootstrap 5", "Bootstrap Icons"],
+      process: [
+        "Planned the sections: hero, about, places and gallery",
+        "Built the layout with the Bootstrap grid",
+        "Added the glassmorphism effects with CSS",
+        "Tested and adjusted the layout on phone, tablet and desktop sizes",
+      ],
+      challenges: [
+        "Making the whole site responsive, so the hero, cards and gallery look right on phones as well as desktops",
+        "Getting the glassmorphism effect right: frosted-glass blur that stays readable on top of busy photos",
+        "Keeping large background photos looking sharp without slowing the page down",
+      ],
+      gallery: [
+        "/images/projects/ireland-showcase-2.jpg",
+        "/images/projects/ireland-showcase-3.jpg",
+        "/images/projects/ireland-showcase-4.jpg",
+      ],
+      result:
+        "A polished, fully responsive showcase site, and solid practice with Bootstrap layouts and modern CSS effects.",
     },
   },
   {
@@ -212,25 +272,39 @@ export const projects: Project[] = [
     description:
       "A responsive card gallery showcasing different types of knives, each with a short history and a link to learn more.",
     category: "Website",
-    tech: ["HTML", "CSS", "Bootstrap"],
-    github: undefined, // TODO
-    demo: undefined, // TODO
+    tech: ["HTML", "CSS", "JavaScript", "Bootstrap"],
+    github: "https://github.com/pancheeze/knife-showcase",
+    demo: "https://pancheeze.github.io/knife-showcase/",
     thumbnail: "/images/projects/knives-gallery.png",
     detail: {
       overview:
         "Knives Gallery presents knife types such as the karambit, balisong, kukri, and bowie knife in a clean, responsive card layout.",
-      problem: "TODO",
-      solution: "TODO",
+      problem:
+        "Writing a card by hand for every knife repeats the same HTML over and over and is hard to update.",
+      solution:
+        "The knife data lives in a JavaScript array, and a loop generates every card, so adding a knife means adding one entry.",
       features: [
+        "Cards generated from data with a JavaScript loop",
         "Responsive card grid",
         "Short description for each knife type",
         "Learn more links",
+        "Dark theme with glassmorphism styling",
       ],
-      stack: ["HTML", "CSS", "Bootstrap"],
-      process: ["TODO"],
-      challenges: ["TODO"],
+      stack: ["HTML", "CSS", "JavaScript", "Bootstrap 5"],
+      process: [
+        "Collected the knife types and their descriptions",
+        "Stored them as a JavaScript array of objects",
+        "Rendered the cards with a loop",
+        "Styled the dark glass theme and the responsive grid",
+      ],
+      challenges: [
+        "Building the card markup with JavaScript instead of writing it in HTML",
+        "Making the grid responsive while keeping every card the same height",
+        "Applying the glassmorphism style on a dark background",
+      ],
       gallery: ["/images/projects/knives-gallery.png"],
-      result: "TODO",
+      result:
+        "A data-driven gallery that's easy to extend, and a solid grasp of rendering content with JavaScript loops.",
     },
   },
   {
@@ -239,21 +313,39 @@ export const projects: Project[] = [
     description:
       "A themed product landing page for limited edition Deadpool & Wolverine Xbox controllers.",
     category: "Landing Page",
-    tech: ["HTML", "CSS", "JavaScript"],
-    github: undefined, // TODO
-    demo: undefined, // TODO
+    tech: ["HTML", "CSS", "Bootstrap"],
+    github: "https://github.com/pancheeze/DPxWV",
+    demo: "https://pancheeze.github.io/DPxWV/",
     thumbnail: "/images/projects/deadpool-wolverine.png",
     detail: {
       overview:
-        "A dark, bold landing page with a hero showcase and navigation for each controller edition.",
-      problem: "TODO",
-      solution: "TODO",
-      features: ["Themed hero section", "Navigation for each edition", "TODO"],
-      stack: ["HTML", "CSS", "JavaScript"],
-      process: ["TODO"],
-      challenges: ["TODO"],
+        "A dark, bold landing page with a hero showcase and a section for each controller edition.",
+      problem:
+        "A product launch page has to grab attention immediately and make every edition easy to compare.",
+      solution:
+        "A themed Bootstrap landing page in the characters' red and yellow colors, with one section per controller listing its key features.",
+      features: [
+        "Themed hero section",
+        "Navigation for each edition",
+        "Four controller editions, each with a feature list",
+        "Choose Your Fighter section",
+        "Responsive layout",
+      ],
+      stack: ["HTML", "CSS", "Bootstrap 5"],
+      process: [
+        "Designed the theme around the two characters' colors",
+        "Built the hero and the edition sections with Bootstrap",
+        "Wrote the product copy and feature lists",
+        "Made the layout responsive",
+      ],
+      challenges: [
+        "Making the layout responsive across screen sizes",
+        "Balancing two strong color themes on a single page",
+        "Keeping the product images sharp on large screens",
+      ],
       gallery: ["/images/projects/deadpool-wolverine.png"],
-      result: "TODO",
+      result:
+        "A bold, responsive landing page, and practice in designing around a brand's look.",
     },
   },
 ];

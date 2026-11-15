@@ -7,7 +7,7 @@ import CustomCursor from "@/components/layout/CustomCursor";
 import PageTransition from "@/components/layout/PageTransition";
 import { profile } from "@/lib/data";
 
-const siteUrl = "https://TODO-your-domain.vercel.app";
+const siteUrl = "https://pancheezy.vercel.app";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
