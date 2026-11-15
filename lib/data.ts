@@ -88,8 +88,9 @@ export const projects: Project[] = [
       "A mobile app that screens chicken droppings for early signs of disease. It runs a machine-learning model fully offline on the phone and tells farmers what to do next.",
     category: "Capstone · Mobile + ML",
     tech: ["Flutter", "Dart", "TensorFlow Lite", "Python"],
-    github: "https://github.com/pancheeze/Chicken-Poop-Scanner-",
-    demo: undefined,
+    github: "https://github.com/pancheeze/ChickDetect",
+    demo: "https://pancheeze.github.io/ChickDetect/",
+    demoLabel: "Visit Website",
     thumbnail: "/images/projects/chickdetect-1.jpg",
     detail: {
       overview:
