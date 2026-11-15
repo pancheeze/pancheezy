@@ -38,7 +38,7 @@ export const profile = {
     "BSIT student at the Polytechnic University of the Philippines building full-stack web and mobile apps that solve real problems — from the database to the interface people use.",
   aboutDescription: [
     "I'm Paul, an IT student at PUP and a full-stack developer who likes owning an idea end to end: designing the database, writing the backend logic and APIs, and shipping a clean, responsive interface on top.",
-    "Most of my work is in PHP, MySQL and JavaScript, with C and C++ for the problem-solving side. Right now I'm lead programmer on our capstone, ChickDetect, a machine-learning app that scans chickens for signs of illness, and going deep on C++. I'm open to internships and to collaborating on projects that ship something useful.",
+    "Most of my work is in PHP, MySQL and JavaScript, with C and C++ for the problem-solving side. Right now I'm lead programmer on our capstone, ChickDetect, a machine-learning app that screens chicken droppings for early signs of disease, and going deep on C++. I'm open to internships and to collaborating on projects that ship something useful.",
   ],
   // Short key/value lines shown in the About section.
   quickFacts: [
@@ -81,6 +81,53 @@ export const skillCategories = [
 ] as const;
 
 export const projects: Project[] = [
+  {
+    slug: "chickdetect",
+    name: "ChickDetect",
+    description:
+      "A mobile app that screens chicken droppings for early signs of disease. It runs a machine-learning model fully offline on the phone and tells farmers what to do next.",
+    category: "Capstone · Mobile + ML",
+    tech: ["Flutter", "Dart", "TensorFlow Lite", "Python"],
+    github: "https://github.com/pancheeze/Chicken-Poop-Scanner-",
+    demo: undefined,
+    thumbnail: "/images/projects/chickdetect-1.jpg",
+    detail: {
+      overview:
+        "Our capstone project, where I'm lead programmer. Farmers photograph a dropping, and the app classifies it on the device as healthy, coccidiosis, salmonella or Newcastle disease, then gives plain-language advice and vet contacts.",
+      problem:
+        "Small poultry farmers often notice disease too late, after it has spread through the flock. Lab tests and vet visits are slow and costly, and farms often have weak internet.",
+      solution:
+        "An offline-first Flutter app with an on-device TensorFlow Lite model. Droppings are one of the earliest visible signs of illness, so a quick photo becomes an early warning, with clear next steps instead of raw percentages.",
+      features: [
+        "Detects healthy, coccidiosis, salmonella and Newcastle disease from a photo",
+        "Rejects photos that aren't droppings, plus photo-quality checks and a photo guide",
+        "Runs fully offline with an on-device TensorFlow Lite model",
+        "Scan history with a flock health summary and rescan reminders",
+        "Step-by-step care advice and vet contacts for each result",
+        "Download website with a per-device install guide",
+      ],
+      stack: ["Flutter", "Dart", "TensorFlow Lite", "Python", "Camera", "Shared Preferences"],
+      process: [
+        "Built the original Flutter app: camera capture, scan flow and history",
+        "Integrated the disease-classification model on-device with TensorFlow Lite",
+        "Added Filipino and English language support",
+        "Team v2: UI/UX redesign, retrained model and release build",
+        "Published a download website for farmers",
+      ],
+      challenges: [
+        "Keeping the model accurate on real farm photos with uneven lighting and cluttered ground",
+        "Avoiding false 'healthy' results on sick droppings, the costliest mistake",
+        "Running inference fast and fully offline on low-end Android phones",
+      ],
+      gallery: [
+        "/images/projects/chickdetect-2.jpg",
+        "/images/projects/chickdetect-3.jpg",
+        "/images/projects/chickdetect-4.jpg",
+      ],
+      result:
+        "The v2 model reaches 96.56% test accuracy across 5 classes. A team capstone: I led programming and built the original app, and the v2 redesign and website were done with my groupmate.",
+    },
+  },
   {
     slug: "swish-streak",
     name: "Swish Streak",
@@ -229,7 +276,7 @@ export const timeline: TimelineItem[] = [
     title: "BS Information Technology Student",
     org: "Polytechnic University of the Philippines – Sto. Tomas Campus",
     description:
-      "Full-stack developer focused on machine learning. Lead programmer of our capstone project, ChickDetect, which trains models on AI-assisted datasets to scan chickens for signs of illness. Consistent President's Lister since first year.",
+      "Full-stack developer focused on machine learning. Lead programmer of our capstone project, ChickDetect, which trains models on AI-assisted datasets to screen chicken droppings for early signs of disease. Consistent President's Lister since first year.",
     skills: ["Machine Learning", "Full-Stack", "PHP", "MySQL"],
   },
   {
