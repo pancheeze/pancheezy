@@ -34,7 +34,7 @@ export const profile = {
   // Status pill above the hero heading; set to "" to hide it.
   availability: "Open to internships & collaborations",
   // Put the PDF in public/cv/ and set the path here; the Download CV button only shows when set.
-  cvUrl: "",
+  cvUrl: "/cv/Paul-Anthony-Pancho-CV.pdf",
   heroDescription:
     "BSIT student at the Polytechnic University of the Philippines building full-stack web and mobile apps that solve real problems — from the database to the interface people use.",
   aboutDescription: [
