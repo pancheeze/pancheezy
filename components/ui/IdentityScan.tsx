@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { KeyboardEvent, MouseEvent, PointerEvent } from "react";
 import { profile } from "@/lib/data";
+import { monoFont } from "@/lib/utils";
 
 const PHOTO_SRC = "/images/ako.jpg";
 // Region of the photo to reconstruct (fractions): head, neck and shoulders.
@@ -12,7 +13,7 @@ const CROP = { x: 0.2, y: 0.255, w: 0.6, h: 0.505 };
 const PAD = 0.04;
 const PAD_BOTTOM = 0.015;
 
-const FONT_FAMILY = '"Source Code Pro", ui-monospace, monospace';
+// Canvas font family: Source Code Pro (see monoFont in lib/utils).
 const LINE_HEIGHT = 1.1;
 // Sparse → dense; brighter photo pixels get denser glyphs.
 const RAMP = ".'`^:;!i~+?]1|tfxvcJLCZ0Ookh*#M&8%B@";
@@ -144,7 +145,7 @@ function buildScene(img: HTMLImageElement, width: number, ctx: CanvasRenderingCo
   const gridW = width - pad * 2;
 
   // Whole-pixel font size so glyphs render crisply; the cell width follows the font's advance.
-  ctx.font = `100px ${FONT_FAMILY}`;
+  ctx.font = `100px ${monoFont()}`;
   const glyphRatio = ctx.measureText("M").width / 100;
   const targetCols = width >= 400 ? 76 : 60;
   const fontSize = Math.max(6, Math.round(gridW / targetCols / glyphRatio));
@@ -394,7 +395,7 @@ function drawPhotoCircle(
 
 function drawRunes(ctx: CanvasRenderingContext2D, scene: Scene, t: number, fadeIn: number) {
   if (fadeIn <= 0) return;
-  ctx.font = `${scene.fontSize}px ${FONT_FAMILY}`;
+  ctx.font = `${scene.fontSize}px ${monoFont()}`;
   scene.runes.forEach((rune, i) => {
     const progress = t / rune.period + rune.phase;
     const frac = progress % 1;
@@ -415,7 +416,7 @@ function drawForming(ctx: CanvasRenderingContext2D, scene: Scene, t: number) {
   let locked = 0;
 
   for (const bucket of SIZE_BUCKETS) {
-    ctx.font = `${Math.round(scene.fontSize * bucket)}px ${FONT_FAMILY}`;
+    ctx.font = `${Math.round(scene.fontSize * bucket)}px ${monoFont()}`;
     for (let i = 0; i < scene.particles.length; i++) {
       const p = scene.particles[i];
       if (t < p.appear) continue;
@@ -462,7 +463,7 @@ function renderPortrait(scene: Scene, dpr: number) {
   const c = cache.getContext("2d")!;
   c.scale(dpr, dpr);
   c.textBaseline = "top";
-  c.font = `${scene.fontSize}px ${FONT_FAMILY}`;
+  c.font = `${scene.fontSize}px ${monoFont()}`;
   for (const p of scene.particles) {
     c.fillStyle = rgba(p.r, p.g, p.b, p.alpha);
     c.fillText(p.ch, p.tx, p.ty);
@@ -575,7 +576,7 @@ function drawLive(
 ) {
   ctx.clearRect(0, 0, scene.width, scene.height);
   ctx.textBaseline = "top";
-  ctx.font = `${scene.fontSize}px ${FONT_FAMILY}`;
+  ctx.font = `${scene.fontSize}px ${monoFont()}`;
   const tick = Math.floor(now / GLYPH_MS);
 
   for (let i = 0; i < scene.particles.length; i++) {
@@ -1026,7 +1027,7 @@ export default function IdentityScan() {
 
     const photo = new Image();
     photo.src = PHOTO_SRC;
-    Promise.all([photo.decode(), document.fonts?.load(`16px ${FONT_FAMILY}`).catch(() => undefined)])
+    Promise.all([photo.decode(), document.fonts?.load(`16px ${monoFont()}`).catch(() => undefined)])
       .then(() => {
         if (cancelled) return;
         img = photo;

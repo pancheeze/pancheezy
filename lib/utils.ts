@@ -9,6 +9,20 @@ export function scrollToSection(id: string) {
   }
 }
 
+let monoFontCache: string | null = null;
+
+// CSS font-family for the monospace font (Source Code Pro via next/font), for canvas
+// text. next/font renames the family, so it is read from the --font-mono variable.
+export function monoFont(): string {
+  if (monoFontCache) return monoFontCache;
+  const family =
+    typeof document === "undefined"
+      ? ""
+      : getComputedStyle(document.documentElement).getPropertyValue("--font-mono").trim();
+  monoFontCache = family ? `${family}, ui-monospace, monospace` : "ui-monospace, monospace";
+  return monoFontCache;
+}
+
 export const EASE = [0.22, 1, 0.36, 1] as const;
 
 export const fadeUp = {

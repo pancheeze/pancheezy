@@ -40,17 +40,12 @@ const config: Config = {
         },
       },
       fontFamily: {
-        sans: [
-          "Inter",
-          "Satoshi",
-          "-apple-system",
-          "BlinkMacSystemFont",
-          "sans-serif",
-        ],
-        display: ["Source Code Pro", "ui-monospace", "monospace"],
-        mono: ["Source Code Pro", "ui-monospace", "monospace"],
+        // Font variables come from next/font in app/layout.tsx.
+        sans: ["var(--font-inter)", "-apple-system", "BlinkMacSystemFont", "sans-serif"],
+        display: ["var(--font-mono)", "ui-monospace", "monospace"],
+        mono: ["var(--font-mono)", "ui-monospace", "monospace"],
         // Pixel font used only for the name in the hero heading.
-        pixel: ["Pixelify Sans", "Source Code Pro", "monospace"],
+        pixel: ["var(--font-pixel)", "var(--font-mono)", "monospace"],
       },
       backgroundImage: {
         "radial-glow":

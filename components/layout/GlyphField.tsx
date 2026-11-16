@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { monoFont } from "@/lib/utils";
 
 // Site-wide background: a faint field of ASCII glyphs that matches the
 // decrypting portrait. The field drifts slower than the page while scrolling
@@ -109,7 +110,7 @@ export default function GlyphField() {
       field.width = Math.round(width * dpr);
       field.height = Math.round(fieldH * dpr);
       fctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      fctx.font = `${FONT_PX}px "Source Code Pro", ui-monospace, monospace`;
+      fctx.font = `${FONT_PX}px ${monoFont()}`;
       fctx.textBaseline = "top";
 
       cells = [];

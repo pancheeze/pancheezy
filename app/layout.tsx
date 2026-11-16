@@ -6,7 +6,29 @@ import ScrollProgress from "@/components/layout/ScrollProgress";
 import CustomCursor from "@/components/layout/CustomCursor";
 import PageTransition from "@/components/layout/PageTransition";
 import GlyphField from "@/components/layout/GlyphField";
+import { Inter, Source_Code_Pro, Pixelify_Sans } from "next/font/google";
 import { profile } from "@/lib/data";
+
+// Fonts are bundled with the site (no render-blocking request to Google Fonts).
+// Each exposes a CSS variable used by Tailwind and by the canvas animations.
+const inter = Inter({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
+  variable: "--font-inter",
+  display: "swap",
+});
+const sourceCodePro = Source_Code_Pro({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-mono",
+  display: "swap",
+});
+const pixelifySans = Pixelify_Sans({
+  subsets: ["latin"],
+  weight: ["700"],
+  variable: "--font-pixel",
+  display: "swap",
+});
 
 const siteUrl = "https://pancheezy.vercel.app";
 
@@ -72,20 +94,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link
-          rel="preconnect"
-          href="https://fonts.gstatic.com"
-          crossOrigin="anonymous"
-        />
-        {/* eslint-disable-next-line @next/next/no-page-custom-font */}
-        <link
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Source+Code+Pro:wght@400;500;600;700&family=Pixelify+Sans:wght@700&display=swap"
-          rel="stylesheet"
-        />
-      </head>
+    <html
+      lang="en"
+      className={`${inter.variable} ${sourceCodePro.variable} ${pixelifySans.variable}`}
+    >
       <body className="font-sans antialiased selection:bg-primary/70">
         <a
           href="#main-content"

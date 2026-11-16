@@ -158,7 +158,15 @@ export default function GitHubActivity({
           </div>
 
           {/* Weeks */}
-          <div className="flex gap-[3px]" role="grid" aria-label="GitHub contributions in the last year">
+          {/* Announced as one image with a summary; the squares are visual only. */}
+          <div
+            className="flex gap-[3px]"
+            role="img"
+            aria-label={`GitHub contributions in the last year: ${data.total} total${
+              lastActive ? `, last active ${formatDate(lastActive.date)}` : ""
+            }`}
+            data-activity-graph
+          >
             {weeks.map((week, w) => (
               <div
                 key={w}
@@ -174,8 +182,7 @@ export default function GitHubActivity({
                   return (
                     <div
                       key={d}
-                      role="gridcell"
-                      aria-label={describe(day)}
+                      data-day
                       onMouseEnter={() => setHovered(day)}
                       onMouseLeave={() => setHovered(null)}
                       className={`${box} flex items-center justify-center transition-colors duration-200 ${

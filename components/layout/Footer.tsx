@@ -23,7 +23,7 @@ export default function Footer() {
       <div className="section-container flex flex-col items-center gap-6 py-10 sm:flex-row sm:justify-between">
         <p className="text-sm text-text-secondary">
           © {year} {profile.name}. All rights reserved.
-          <span className="mt-1 block text-xs text-text-secondary/60">
+          <span className="mt-1 block text-xs text-text-secondary">
             Design inspired by{" "}
             <a
               href="https://github.com/DapinKecapManis/Portofolio"
