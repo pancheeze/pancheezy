@@ -6,8 +6,8 @@ import { ArrowUpRight } from "lucide-react";
 import type { ContributionCalendar, ContributionDay } from "@/lib/github";
 import { fadeUp } from "@/lib/utils";
 
-// GitHub contribution graph. Squares "decrypt" into place the first time the
-// graph scrolls into view: each one flickers as a glyph, then settles.
+// GitHub contribution graph. Squares "decrypt" into place every time the graph
+// scrolls into view (down or up): each one flickers as a glyph, then settles.
 
 const GLYPHS = "!<>-_\\/[]{}=+*^?#%&$@01";
 const MOBILE_WEEKS = 18; // phones show the last ~4 months (fits a 360px screen)
@@ -48,7 +48,11 @@ export default function GitHubActivity({
   profileUrl: string;
 }) {
   const ref = useRef<HTMLDivElement>(null);
-  const inView = useInView(ref, { once: true, margin: "0px 0px -15% 0px" });
+  // Start the reveal once the graph is well inside the screen; reset it only once it
+  // is fully off screen, so it never blanks out while still partly visible.
+  const inView = useInView(ref, { margin: "-15% 0px -15% 0px" });
+  const onScreen = useInView(ref);
+  const startedRef = useRef(false);
   const reduceMotion = useReducedMotion();
   const [hovered, setHovered] = useState<ContributionDay | null>(null);
   const [elapsed, setElapsed] = useState<number | null>(null); // null = not started
@@ -81,17 +85,32 @@ export default function GitHubActivity({
   const totalDuration = weeks.length * COLUMN_DELAY_MS + JITTER_MS;
   const done = reduceMotion || (elapsed !== null && elapsed >= totalDuration);
 
+  const timerRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
+
+  // Reset while fully off screen so the reveal replays on the next pass.
   useEffect(() => {
-    if (!inView || reduceMotion) return;
+    if (!onScreen && !reduceMotion) {
+      clearInterval(timerRef.current);
+      startedRef.current = false;
+      setElapsed(null);
+    }
+  }, [onScreen, reduceMotion]);
+
+  // Once started, a reveal always runs to the end (no freezing half-way).
+  useEffect(() => {
+    if (!inView || reduceMotion || startedRef.current) return;
+    startedRef.current = true;
     const start = performance.now();
     setElapsed(0);
-    const timer = setInterval(() => {
+    clearInterval(timerRef.current);
+    timerRef.current = setInterval(() => {
       const t = performance.now() - start;
       setElapsed(t);
-      if (t >= totalDuration) clearInterval(timer);
+      if (t >= totalDuration) clearInterval(timerRef.current);
     }, STEP_MS);
-    return () => clearInterval(timer);
   }, [inView, reduceMotion, totalDuration]);
+
+  useEffect(() => () => clearInterval(timerRef.current), []);
 
   const firstMobileWeek = Math.max(0, weeks.length - MOBILE_WEEKS);
 
