@@ -3,10 +3,12 @@
 import { motion } from "framer-motion";
 import SectionHeading from "@/components/ui/SectionHeading";
 import ProjectCard from "@/components/ui/ProjectCard";
-import { projects } from "@/lib/data";
+import GitHubActivity from "@/components/ui/GitHubActivity";
+import { profile, projects } from "@/lib/data";
+import type { ContributionCalendar } from "@/lib/github";
 import { staggerContainer } from "@/lib/utils";
 
-export default function Projects() {
+export default function Projects({ activity }: { activity?: ContributionCalendar | null }) {
   return (
     <section id="projects" className="section-padding relative">
       <div className="section-container">
@@ -27,6 +29,8 @@ export default function Projects() {
             <ProjectCard key={project.slug} project={project} index={i} />
           ))}
         </motion.div>
+
+        {activity && <GitHubActivity data={activity} profileUrl={profile.github} />}
       </div>
     </section>
   );
