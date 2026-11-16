@@ -7,19 +7,40 @@ import SectionHeading from "@/components/ui/SectionHeading";
 import { profile } from "@/lib/data";
 import { fadeUp, staggerContainer } from "@/lib/utils";
 
-type Status = "idle" | "loading" | "success";
+type Status = "idle" | "loading" | "success" | "error";
 
 export default function Contact() {
   const [status, setStatus] = useState<Status>("idle");
+  const [error, setError] = useState("");
   const [focused, setFocused] = useState<string | null>(null);
 
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+  // Sends the message to /api/contact, which emails it to the site owner.
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    const form = e.currentTarget;
+    const data = new FormData(form);
     setStatus("loading");
-    setTimeout(() => {
+    setError("");
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: data.get("visitor-fullname"),
+          email: data.get("visitor-emailaddr"),
+          message: data.get("message"),
+          website: data.get("website"),
+        }),
+      });
+      const result = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(result.error || "Your message couldn't be sent.");
+      form.reset();
       setStatus("success");
-      setTimeout(() => setStatus("idle"), 2500);
-    }, 1400);
+      setTimeout(() => setStatus("idle"), 4000);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Your message couldn't be sent.");
+      setStatus("error");
+    }
   };
 
   const contactLinks = [
@@ -30,8 +51,8 @@ export default function Contact() {
   ];
 
   const fields = [
-    { id: "visitor-fullname", label: "Name", type: "text", placeholder: "Your full name" },
-    { id: "visitor-emailaddr", label: "Email", type: "email", placeholder: "you@example.com" },
+    { id: "visitor-fullname", label: "Name", type: "text", placeholder: "Your full name", maxLength: 100 },
+    { id: "visitor-emailaddr", label: "Email", type: "email", placeholder: "you@example.com", maxLength: 200 },
   ];
 
   return (
@@ -95,6 +116,7 @@ export default function Contact() {
                     id={field.id}
                     name={field.id}
                     type={field.type}
+                    maxLength={field.maxLength}
                     required
                     autoComplete="off"
                     data-lpignore="true"
@@ -130,6 +152,7 @@ export default function Contact() {
                 id="message"
                 name="message"
                 required
+                maxLength={5000}
                 rows={5}
                 placeholder="Tell me about your project or idea..."
                 onFocus={() => setFocused("message")}
@@ -149,15 +172,21 @@ export default function Contact() {
               />
             </motion.div>
 
+            {/* Honeypot: hidden from people, but bots fill it in and get ignored. */}
+            <div aria-hidden className="absolute -left-[9999px] h-px w-px overflow-hidden">
+              <label htmlFor="website">Leave this field empty</label>
+              <input id="website" name="website" type="text" tabIndex={-1} autoComplete="off" />
+            </div>
+
             <motion.button
               variants={fadeUp}
               type="submit"
-              disabled={status !== "idle"}
-              whileHover={{ scale: status === "idle" ? 1.02 : 1 }}
-              whileTap={{ scale: status === "idle" ? 0.97 : 1 }}
+              disabled={status === "loading" || status === "success"}
+              whileHover={{ scale: status === "idle" || status === "error" ? 1.02 : 1 }}
+              whileTap={{ scale: status === "idle" || status === "error" ? 0.97 : 1 }}
               className="btn-primary mt-2 w-full sm:w-fit"
             >
-              {status === "idle" && (
+              {(status === "idle" || status === "error") && (
                 <>
                   <Send size={16} />
                   Send Message
@@ -180,6 +209,21 @@ export default function Contact() {
                 </>
               )}
             </motion.button>
+
+            <p role="status" aria-live="polite" className="min-h-[1.25rem] text-sm">
+              {status === "success" && (
+                <span className="text-secondary">Thanks! Your message is on its way. I&apos;ll reply soon.</span>
+              )}
+              {status === "error" && (
+                <span className="text-[#E58A8A]">
+                  {error} You can also email me at{" "}
+                  <a href={`mailto:${profile.email}`} className="break-all underline hover:text-white">
+                    {profile.email}
+                  </a>
+                  .
+                </span>
+              )}
+            </p>
           </motion.form>
         </div>
       </div>
