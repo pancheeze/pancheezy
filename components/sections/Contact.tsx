@@ -64,9 +64,10 @@ export default function Contact() {
                 <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary">
                   <Icon size={18} />
                 </span>
-                <span>
+                <span className="min-w-0">
                   <span className="block text-xs text-text-secondary">{label}</span>
-                  <span className="block text-sm font-medium text-white">{value}</span>
+                  {/* break-all lets the long email wrap instead of overflowing on phones */}
+                  <span className="block break-all text-sm font-medium text-white">{value}</span>
                 </span>
               </motion.a>
             ))}

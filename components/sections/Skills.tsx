@@ -2,10 +2,24 @@
 
 import { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Code2 } from "lucide-react";
+import { Code2, Network } from "lucide-react";
 import SectionHeading from "@/components/ui/SectionHeading";
 import { skillCategories, skills } from "@/lib/data";
+import { skillIcons } from "@/lib/skillIcons";
 import { cn, fadeUp, staggerContainer } from "@/lib/utils";
+
+// Brand logo when available, otherwise a generic icon.
+function SkillIcon({ name }: { name: string }) {
+  const path = skillIcons[name];
+  if (path) {
+    return (
+      <svg viewBox="0 0 24 24" width={20} height={20} fill="currentColor" aria-hidden>
+        <path d={path} />
+      </svg>
+    );
+  }
+  return name === "REST APIs" ? <Network size={20} /> : <Code2 size={20} />;
+}
 
 type Filter = "All" | (typeof skillCategories)[number];
 
@@ -51,7 +65,7 @@ export default function Skills() {
           initial="hidden"
           whileInView="show"
           viewport={{ once: true, amount: 0.1 }}
-          className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4"
+          className="grid grid-cols-3 gap-3 sm:grid-cols-4 sm:gap-4 lg:grid-cols-6"
         >
           <AnimatePresence mode="wait">
             <motion.div
@@ -67,7 +81,7 @@ export default function Skills() {
                   key={skill.name}
                   variants={fadeUp}
                   whileHover={{ y: -6 }}
-                  className="group relative flex flex-col items-center gap-3 overflow-hidden rounded-2xl border border-white/10 bg-white/[0.02] px-4 py-6 text-center transition-colors duration-300 hover:border-primary/50"
+                  className="group relative flex flex-col items-center gap-3 overflow-hidden rounded-2xl border border-white/10 bg-white/[0.02] px-2 py-5 text-center sm:px-4 sm:py-6 transition-colors duration-300 hover:border-primary/50"
                 >
                   <span
                     aria-hidden
@@ -78,7 +92,7 @@ export default function Skills() {
                     }}
                   />
                   <span className="relative flex h-11 w-11 items-center justify-center rounded-xl bg-primary/15 text-primary transition-transform duration-300 group-hover:scale-110">
-                    <Code2 size={20} />
+                    <SkillIcon name={skill.name} />
                   </span>
                   <span className="relative text-xs font-medium text-white sm:text-sm">
                     {skill.name}

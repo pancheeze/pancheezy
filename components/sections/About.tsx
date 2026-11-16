@@ -106,11 +106,13 @@ export default function About() {
               className="glass-card mb-8 p-5 font-mono text-[12px] leading-loose tracking-wide sm:text-[13px]"
             >
               {profile.quickFacts.map(([key, value]) => (
-                <div key={key} className="flex flex-wrap gap-x-2">
-                  <span className="text-primary">&gt;</span>
-                  <span className="text-white">{key}</span>
-                  <span className="text-text-muted">&rarr;</span>
-                  <span className="text-secondary">{value}</span>
+                // No wrapping between parts: a long value wraps inside its own column
+                // instead of dropping under the key.
+                <div key={key} className="flex gap-x-2">
+                  <span className="shrink-0 text-primary">&gt;</span>
+                  <span className="shrink-0 text-white">{key}</span>
+                  <span className="shrink-0 text-text-muted">&rarr;</span>
+                  <span className="min-w-0 text-secondary">{value}</span>
                 </div>
               ))}
             </motion.div>

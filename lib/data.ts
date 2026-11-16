@@ -61,23 +61,30 @@ export const skills: Skill[] = [
   { name: "JavaScript", category: "Programming" },
   { name: "C", category: "Programming" },
   { name: "C++", category: "Programming" },
+  { name: "C#", category: "Programming" },
   { name: "HTML", category: "Frontend" },
   { name: "CSS", category: "Frontend" },
   { name: "Bootstrap", category: "Frontend" },
   { name: "PHP", category: "Backend" },
   { name: "REST APIs", category: "Backend" },
   { name: "MySQL", category: "Database" },
+  { name: "Flutter", category: "Mobile" },
+  { name: "Dart", category: "Mobile" },
+  { name: "TensorFlow Lite", category: "AI" },
   { name: "Git", category: "Tools" },
   { name: "GitHub", category: "Tools" },
+  { name: "Unity", category: "Tools" },
   { name: "Photoshop", category: "Tools" },
 ];
 
-// Each entry becomes a filter tab; also available: "Mobile", "AI".
+// Each entry becomes a filter tab.
 export const skillCategories = [
   "Programming",
   "Frontend",
   "Backend",
   "Database",
+  "Mobile",
+  "AI",
   "Tools",
 ] as const;
 

@@ -95,7 +95,7 @@ body::-webkit-scrollbar {
   }
 
   .section-padding {
-    @apply pt-16 pb-20 sm:pt-20 sm:pb-24 lg:pt-24 lg:pb-28;
+    @apply pt-14 pb-16 sm:pt-16 sm:pb-20 lg:pt-20 lg:pb-20;
   }
 
   .gradient-text {
