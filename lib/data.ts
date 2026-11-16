@@ -31,6 +31,8 @@ export const profile = {
   githubHandle: "@pancheeze",
   linkedin: "https://www.linkedin.com/in/paul-pancho-76b8103a5/",
   facebook: "https://www.facebook.com/share/1DwHRaC69i/",
+  // Status pill above the hero heading; set to "" to hide it.
+  availability: "Open to internships & collaborations",
   // Put the PDF in public/cv/ and set the path here; the Download CV button only shows when set.
   cvUrl: "",
   heroDescription:
@@ -360,47 +362,8 @@ export const projects: Project[] = [
         "A data-driven gallery that's easy to extend, and a solid grasp of rendering content with JavaScript loops.",
     },
   },
-  {
-    slug: "deadpool-wolverine",
-    name: "Deadpool & Wolverine Controllers",
-    description:
-      "A themed product landing page for limited edition Deadpool & Wolverine Xbox controllers.",
-    category: "Landing Page",
-    tech: ["HTML", "CSS", "Bootstrap"],
-    github: "https://github.com/pancheeze/DPxWV",
-    demo: "https://pancheeze.github.io/DPxWV/",
-    thumbnail: "/images/projects/deadpool-wolverine.png",
-    detail: {
-      overview:
-        "A dark, bold landing page with a hero showcase and a section for each controller edition.",
-      problem:
-        "A product launch page has to grab attention immediately and make every edition easy to compare.",
-      solution:
-        "A themed Bootstrap landing page in the characters' red and yellow colors, with one section per controller listing its key features.",
-      features: [
-        "Themed hero section",
-        "Navigation for each edition",
-        "Four controller editions, each with a feature list",
-        "Choose Your Fighter section",
-        "Responsive layout",
-      ],
-      stack: ["HTML", "CSS", "Bootstrap 5"],
-      process: [
-        "Designed the theme around the two characters' colors",
-        "Built the hero and the edition sections with Bootstrap",
-        "Wrote the product copy and feature lists",
-        "Made the layout responsive",
-      ],
-      challenges: [
-        "Making the layout responsive across screen sizes",
-        "Balancing two strong color themes on a single page",
-        "Keeping the product images sharp on large screens",
-      ],
-      gallery: ["/images/projects/deadpool-wolverine.png"],
-      result:
-        "A bold, responsive landing page, and practice in designing around a brand's look.",
-    },
-  },
+  // Deadpool & Wolverine (github.com/pancheeze/DPxWV) was removed from the showcase;
+  // its thumbnail is still in public/images/projects/ if it is ever added back.
 ];
 
 export const timeline: TimelineItem[] = [

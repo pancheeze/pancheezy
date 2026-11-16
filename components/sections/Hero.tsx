@@ -25,7 +25,7 @@ export default function Hero() {
     >
       {/* On very short desktop screens the centred content would slide under the fixed
           navbar, so the whole hero (text and portrait together) shifts down below it. */}
-      <div className="relative flex flex-col lg:grid lg:grid-cols-2 min-h-screen items-center gap-4 lg:gap-8 overflow-hidden lg:overflow-visible lg:[@media(max-height:650px)]:pt-24">
+      <div className="relative flex flex-col lg:grid lg:grid-cols-2 min-h-screen items-center gap-4 lg:gap-8 overflow-hidden lg:overflow-visible lg:[@media(max-height:700px)]:pt-24">
         <div className="flex flex-col justify-center items-center text-center lg:items-start lg:text-left pt-16 sm:pt-24 lg:pt-0 px-4 sm:px-6 lg:pl-16 lg:pr-0 order-2 lg:order-1 relative z-10 w-full lg:translate-x-16">
           <motion.div
             variants={heroContainer}
@@ -33,6 +33,18 @@ export default function Hero() {
             animate="show"
             className="w-full max-w-xl"
           >
+            {profile.availability && (
+              <motion.div variants={heroItem} className="mb-5">
+                <span className="inline-flex items-center gap-2 rounded-full border border-secondary/30 bg-secondary/10 px-3 py-1 text-xs font-medium text-secondary">
+                  <span className="relative flex h-2 w-2" aria-hidden>
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-secondary opacity-60 motion-reduce:animate-none" />
+                    <span className="relative inline-flex h-2 w-2 rounded-full bg-secondary" />
+                  </span>
+                  {profile.availability}
+                </span>
+              </motion.div>
+            )}
+
             <motion.span variants={heroItem} className="eyebrow mb-5">
               Welcome to my portfolio
             </motion.span>
