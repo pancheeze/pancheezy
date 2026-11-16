@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
@@ -12,6 +12,8 @@ export default function Navbar() {
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState("#home");
   const pathname = usePathname();
+  // Section to scroll to once the mobile menu has finished closing.
+  const pendingScroll = useRef<string | null>(null);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
@@ -37,10 +39,15 @@ export default function Navbar() {
       }
 
       if (window.location.hash) {
-        const target = document.querySelector(window.location.hash);
-        if (target) {
-          target.scrollIntoView({ behavior: "smooth" });
+        // Follow a link like "/#projects". On a reload, keep the position the browser restored.
+        const nav = performance.getEntriesByType("navigation")[0] as
+          | PerformanceNavigationTiming
+          | undefined;
+        if (nav?.type !== "reload") {
+          document.querySelector(window.location.hash)?.scrollIntoView({ behavior: "smooth" });
         }
+        // Drop the hash so a later reload doesn't jump back to that section.
+        history.replaceState(null, "", window.location.pathname + window.location.search);
       }
 
       observer = new IntersectionObserver(
@@ -70,9 +77,14 @@ export default function Navbar() {
       window.location.href = `/${href}`;
       return;
     }
+    if (open) {
+      // Closing the menu cancels a smooth scroll on phones, so scroll after it closes.
+      pendingScroll.current = href;
+      setOpen(false);
+      return;
+    }
     scrollToSection(href);
-    setOpen(false);
-  }, [pathname]);
+  }, [pathname, open]);
 
   return (
     <motion.header
@@ -166,7 +178,14 @@ export default function Navbar() {
           </button>
         </nav>
 
-        <AnimatePresence>
+        <AnimatePresence
+          onExitComplete={() => {
+            if (pendingScroll.current) {
+              scrollToSection(pendingScroll.current);
+              pendingScroll.current = null;
+            }
+          }}
+        >
           {open && (
             <motion.div
               initial={{ opacity: 0, height: 0 }}
