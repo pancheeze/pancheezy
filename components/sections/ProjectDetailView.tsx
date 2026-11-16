@@ -236,14 +236,23 @@ export default function ProjectDetailView({ project }: { project: Project }) {
                 whileHover={{ scale: 1.03 }}
                 className="relative aspect-[4/3] overflow-hidden rounded-2xl border border-white/10"
               >
-                <Image
-                  src={image}
-                  unoptimized={image.endsWith(".svg")}
-                  alt={`${project.name} screenshot ${i + 1}`}
-                  fill
-                  sizes="(max-width: 768px) 100vw, 33vw"
-                  className="object-cover transition-transform duration-500 hover:scale-110"
-                />
+                {/* Opens the full-size image, so detailed shots stay readable. */}
+                <a
+                  href={image}
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-label={`Open ${project.name} screenshot ${i + 1} full size`}
+                  className="absolute inset-0 cursor-zoom-in"
+                >
+                  <Image
+                    src={image}
+                    unoptimized={image.endsWith(".svg")}
+                    alt={`${project.name} screenshot ${i + 1}`}
+                    fill
+                    sizes="(max-width: 768px) 100vw, 33vw"
+                    className="object-cover transition-transform duration-500 hover:scale-110"
+                  />
+                </a>
               </motion.div>
             ))}
           </motion.div>

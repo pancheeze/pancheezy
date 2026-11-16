@@ -129,6 +129,59 @@ export const projects: Project[] = [
     },
   },
   {
+    slug: "motoshapi",
+    name: "Motoshapi",
+    description:
+      "A full-stack online shop for motorcycle parts and accessories, with PayPal checkout, automatic SMS and email notifications, an AI shopping assistant and a complete admin panel.",
+    category: "Team Project · Full-Stack Web App",
+    tech: ["PHP", "MySQL", "JavaScript", "PayPal API", "REST API"],
+    github: "https://github.com/pancheeze/motoshapi-final-project-",
+    demo: undefined,
+    thumbnail: "/images/projects/motoshapi-hero.jpg",
+    detail: {
+      overview:
+        "Our web development final project, built by a team of four with me as lead programmer. Customers browse motor oil, tires and mags, check out with PayPal or cash on delivery, and get order updates by SMS and email, while admins manage the whole store from a dashboard.",
+      problem:
+        "Small motorcycle parts shops often sell through chat and phone calls, which makes stock, orders and customer updates hard to keep track of.",
+      solution:
+        "A PHP and MySQL e-commerce system that handles the full flow, from product catalog to checkout, payment and delivery updates, with an admin panel for products, orders and customers, and automatic SMS and email so customers always know their order status.",
+      features: [
+        "Product catalog with search, category filters, product variations and featured products",
+        "Cart and checkout with PayPal (sandbox) or cash on delivery",
+        "Automatic SMS order notifications and two-way SMS replies through an SMS gateway",
+        "Automatic emails: welcome, order status updates and password reset",
+        "AI shopping assistant chatbot powered by a local Ollama model",
+        "Admin dashboard: sales overview, low-stock alerts, products, orders, users and admins",
+        "REST API and two-way customer account sync with a partner system",
+      ],
+      stack: ["PHP", "MySQL", "JavaScript", "HTML", "CSS", "PayPal REST API", "SMSGate", "SMTP (Gmail)", "Ollama", "XAMPP"],
+      process: [
+        "Built the first version of the site",
+        "Redesigned the full UI with a consistent design system",
+        "Integrated SMS notifications with two-way replies",
+        "Integrated automatic email notifications for every order flow",
+        "Finished the PayPal integration and fixed issues after merging",
+        "Switched the chatbot from hard-coded answers to a local Ollama AI model",
+        "Reviewed and merged the team's pull requests as lead programmer",
+      ],
+      challenges: [
+        "Keeping SMS, email and payment updates in sync across every order status",
+        "Resolving merge conflicts as four people worked on the same codebase, including restoring a payment method lost in a merge",
+        "Connecting to an SMS gateway running on a phone over the local network",
+      ],
+      gallery: [
+        "/images/projects/motoshapi-shop.jpg",
+        "/images/projects/motoshapi-chatbot.jpg",
+        "/images/projects/motoshapi-paypal.jpg",
+        "/images/projects/motoshapi-admin.jpg",
+        "/images/projects/motoshapi-sms.jpg",
+        "/images/projects/motoshapi-database.jpg",
+      ],
+      result:
+        "A complete, working e-commerce system delivered as our final project. As lead programmer I handled the integrations and UI, and kept four people's work merging cleanly.",
+    },
+  },
+  {
     slug: "swish-streak",
     name: "Swish Streak",
     description:
