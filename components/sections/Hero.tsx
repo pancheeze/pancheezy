@@ -23,9 +23,9 @@ export default function Hero() {
       className="relative min-h-screen overflow-hidden lg:overflow-visible w-full"
       style={{ clipPath: 'none' }}
     >
-      {/* On short desktop screens the content is taller than the window, so it starts
-          below the fixed navbar instead of being centred (which pushed it under the navbar). */}
-      <div className="relative flex flex-col lg:grid lg:grid-cols-2 min-h-screen items-center gap-4 lg:gap-8 overflow-hidden lg:overflow-visible lg:[@media(max-height:760px)]:items-start lg:[@media(max-height:760px)]:pt-28">
+      {/* On very short desktop screens the centred content would slide under the fixed
+          navbar, so the whole hero (text and portrait together) shifts down below it. */}
+      <div className="relative flex flex-col lg:grid lg:grid-cols-2 min-h-screen items-center gap-4 lg:gap-8 overflow-hidden lg:overflow-visible lg:[@media(max-height:650px)]:pt-24">
         <div className="flex flex-col justify-center items-center text-center lg:items-start lg:text-left pt-16 sm:pt-24 lg:pt-0 px-4 sm:px-6 lg:pl-16 lg:pr-0 order-2 lg:order-1 relative z-10 w-full lg:translate-x-16">
           <motion.div
             variants={heroContainer}
@@ -133,7 +133,7 @@ export default function Hero() {
         </motion.div>
         </div>
 
-        <div className="flex justify-center items-start lg:items-center w-full lg:min-h-screen order-1 lg:order-2 overflow-visible lg:[@media(max-height:760px)]:min-h-0 lg:[@media(max-height:760px)]:items-start">
+        <div className="flex justify-center items-start lg:items-center w-full lg:min-h-screen order-1 lg:order-2 overflow-visible">
           <LanyardCard />
         </div>
       </div>
