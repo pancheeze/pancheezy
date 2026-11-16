@@ -38,10 +38,10 @@ export const metadata: Metadata = {
     siteName: profile.name,
     images: [
       {
-        url: "/images/og-image.svg",
+        url: "/images/og-image.png",
         width: 1200,
         height: 630,
-        alt: profile.name,
+        alt: `${profile.name}, Full-Stack Developer`,
       },
     ],
   },
@@ -49,7 +49,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: `${profile.name} — Full-Stack Developer & BSIT Student`,
     description: profile.heroDescription,
-    images: ["/images/og-image.svg"],
+    images: ["/images/og-image.png"],
   },
   robots: {
     index: true,
