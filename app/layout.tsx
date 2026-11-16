@@ -5,6 +5,7 @@ import Footer from "@/components/layout/Footer";
 import ScrollProgress from "@/components/layout/ScrollProgress";
 import CustomCursor from "@/components/layout/CustomCursor";
 import PageTransition from "@/components/layout/PageTransition";
+import GlyphField from "@/components/layout/GlyphField";
 import { profile } from "@/lib/data";
 
 const siteUrl = "https://pancheezy.vercel.app";
@@ -92,14 +93,12 @@ export default function RootLayout({
         >
           Skip to main content
         </a>
-        <div
-          aria-hidden
-          className="pointer-events-none fixed inset-0 -z-10 bg-grid-pattern bg-grid opacity-30"
-        />
+        <GlyphField />
         <div
           aria-hidden
           className="pointer-events-none fixed inset-0 -z-10 bg-radial-glow"
         />
+        <div aria-hidden className="film-grain pointer-events-none fixed inset-0 -z-10" />
         <CustomCursor />
         <ScrollProgress />
         <Navbar />

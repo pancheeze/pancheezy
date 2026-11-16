@@ -53,13 +53,8 @@ const config: Config = {
         pixel: ["Pixelify Sans", "Source Code Pro", "monospace"],
       },
       backgroundImage: {
-        "grid-pattern":
-          "linear-gradient(to right, rgba(255,255,255,0.04) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.04) 1px, transparent 1px)",
         "radial-glow":
           "radial-gradient(circle at center, rgba(236,163,95,0.18), transparent 70%)",
-      },
-      backgroundSize: {
-        grid: "44px 44px",
       },
       boxShadow: {
         glow: "0 0 40px rgba(236, 163, 95, 0.35)",
