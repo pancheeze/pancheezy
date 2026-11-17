@@ -40,7 +40,9 @@ export default function LoadingScreen() {
       : [...name]
           .map((c, i) => {
             if (c === " " || progress >= (i + 1) / name.length) return c;
-            return GLYPHS[Math.floor(Math.random() * GLYPHS.length)];
+            // Changes every tick, derived from the timer (keeps render pure).
+            const tick = Math.floor(elapsed / TICK_MS);
+            return GLYPHS[(i * 7 + tick * 13 + ((i * tick) % 5)) % GLYPHS.length];
           })
           .join("");
 

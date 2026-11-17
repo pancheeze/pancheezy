@@ -36,7 +36,7 @@ const config: Config = {
         text: {
           DEFAULT: "#E9E6DF",
           secondary: "#98A2AB",
-          muted: "#6B7580",
+          muted: "#7D8792", // readable on the dark background (WCAG AA)
         },
       },
       fontFamily: {
