@@ -93,11 +93,11 @@ export default function Byte() {
   }, []);
 
   // ----- Wandering brain -----
-  const nextAction = useCallback(() => {
+  const nextAction = useCallback((forceWalk = false) => {
     clearTimeout(timer.current);
-    const roll = Math.random();
+    const roll = forceWalk ? 0 : Math.random();
 
-    if (roll < 0.55) {
+    if (roll < 0.6) {
       // Walk somewhere new, at least a little way from here.
       let target = rand(EDGE, maxX());
       if (Math.abs(target - xRef.current) < 80) target = xRef.current > maxX() / 2 ? EDGE + rand(0, 60) : maxX() - rand(0, 60);
@@ -106,18 +106,18 @@ export default function Byte() {
       timer.current = setTimeout(() => {
         setMode("idle");
         setBubble(Math.random() < 0.45); // sometimes say "ask me" on arrival
-        timer.current = setTimeout(nextAction, rand(2500, 5000));
+        timer.current = setTimeout(() => nextAction(), rand(2500, 5000));
       }, ms);
-    } else if (roll < 0.85) {
+    } else if (roll < 0.88) {
       // Stand around and look left and right.
       setMode("idle");
       setFacing((f) => (f === 1 ? -1 : 1));
-      timer.current = setTimeout(nextAction, rand(2000, 4000));
+      timer.current = setTimeout(() => nextAction(), rand(2000, 4000));
     } else {
       // Nap.
       setMode("sleep");
       setBubble(false);
-      timer.current = setTimeout(nextAction, rand(7000, 11000));
+      timer.current = setTimeout(() => nextAction(), rand(7000, 11000));
     }
   }, [moveTo]);
 
@@ -135,7 +135,7 @@ export default function Byte() {
     }
     timer.current = setTimeout(() => {
       setBubble(true);
-      timer.current = setTimeout(nextAction, 4000);
+      timer.current = setTimeout(() => nextAction(true), 3000);
     }, 2500);
     return () => clearTimeout(timer.current);
   }, [nextAction]);
@@ -203,7 +203,7 @@ export default function Byte() {
 
   const closeChat = () => {
     setOpen(false);
-    if (!reducedMotion) timer.current = setTimeout(nextAction, 2500);
+    if (!reducedMotion) timer.current = setTimeout(() => nextAction(true), 2000);
   };
 
   useEffect(() => {
@@ -399,12 +399,15 @@ export default function Byte() {
             ref={byteRef}
             type="button"
             onClick={() => (open ? closeChat() : openChat())}
-            onMouseEnter={() => {
+            // Touch screens fire fake hover/focus on tap that never ends, so only
+            // a real mouse or keyboard focus counts as hovering.
+            onPointerEnter={(e) => {
+              if (e.pointerType !== "mouse") return;
               setHovered(true);
               if (mode === "sleep") setMode("idle");
             }}
-            onMouseLeave={() => setHovered(false)}
-            onFocus={() => setHovered(true)}
+            onPointerLeave={(e) => e.pointerType === "mouse" && setHovered(false)}
+            onFocus={(e) => e.currentTarget.matches(":focus-visible") && setHovered(true)}
             onBlur={() => setHovered(false)}
             aria-label={open ? "Close chat with Byte" : `Chat with Byte, ${firstName}'s assistant`}
             aria-expanded={open}
