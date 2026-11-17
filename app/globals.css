@@ -139,58 +139,57 @@ body::-webkit-scrollbar {
   }
 }
 
-/* ---------- Byte, the wandering site mascot (components/byte) ---------- */
-.byte-svg .byte-leg,
-.byte-svg .byte-torso,
-.byte-svg .byte-eyes {
-  transform-box: fill-box;
+/* ---------- Byte, the wandering pixel mascot (components/byte) ---------- */
+.byte-pixels rect {
+  transition: none;
 }
-.byte-svg .byte-leg {
-  transform-origin: 50% 0%;
+/* Byte <-> chat icon morph: every pixel flies to its new spot. */
+.byte-morphing rect {
+  transition: transform 0.55s cubic-bezier(0.65, 0, 0.35, 1), fill 0.55s ease, opacity 0.35s ease;
 }
-.byte-svg .byte-eyes {
-  transform-origin: 50% 50%;
-  animation: byte-blink 4.5s infinite;
+/* Chat icon dots bounce like a typing indicator while Byte is answering. */
+.byte-typing .byte-dot1,
+.byte-typing .byte-dot2,
+.byte-typing .byte-dot3 {
+  animation: byte-dot 0.9s steps(2, jump-none) infinite;
 }
-.byte-walking .byte-leg-left {
-  animation: byte-step 0.36s ease-in-out infinite alternate;
+.byte-typing .byte-dot2 { animation-delay: 0.15s; }
+.byte-typing .byte-dot3 { animation-delay: 0.3s; }
+/* Pixel-style speech bubble: square, with stepped corners. */
+.byte-bubble {
+  box-shadow: 0 -3px 0 0 #E9E6DF, 0 3px 0 0 #E9E6DF, -3px 0 0 0 #E9E6DF, 3px 0 0 0 #E9E6DF;
 }
-.byte-walking .byte-leg-right {
-  animation: byte-step 0.36s ease-in-out infinite alternate-reverse;
-}
-.byte-walking .byte-torso {
-  animation: byte-bob 0.18s ease-in-out infinite alternate;
-}
-.byte-antenna-blink {
-  animation: byte-pulse 0.6s ease-in-out infinite alternate;
+.byte-btn {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
 }
 .byte-zzz {
-  animation: byte-zzz 2.4s ease-out infinite;
+  animation: byte-zzz 2.4s steps(6) infinite;
 }
-@keyframes byte-step {
-  from { transform: rotate(-14deg); }
-  to   { transform: rotate(14deg); }
+.byte-heart {
+  animation: byte-heart 1.2s steps(8) forwards;
 }
-@keyframes byte-bob {
-  from { transform: translateY(0); }
-  to   { transform: translateY(-1.5px); }
-}
-@keyframes byte-blink {
-  0%, 92%, 100% { transform: scaleY(1); }
-  95%           { transform: scaleY(0.1); }
-}
-@keyframes byte-pulse {
-  from { opacity: 0.35; }
-  to   { opacity: 1; }
+@keyframes byte-dot {
+  from { opacity: 1; }
+  to   { opacity: 0.25; }
 }
 @keyframes byte-zzz {
-  0%   { opacity: 0; transform: translate(0, 0) scale(0.7); }
+  0%   { opacity: 0; transform: translate(0, 0); }
   30%  { opacity: 1; }
-  100% { opacity: 0; transform: translate(10px, -22px) scale(1.1); }
+  100% { opacity: 0; transform: translate(10px, -22px); }
+}
+@keyframes byte-heart {
+  0%   { opacity: 0; transform: translateY(0); }
+  20%  { opacity: 1; }
+  100% { opacity: 0; transform: translateY(-36px); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .byte-svg *,
-  .byte-zzz {
+  .byte-morphing rect,
+  .byte-zzz,
+  .byte-heart,
+  .byte-typing rect {
+    transition: none !important;
     animation: none !important;
   }
 }
