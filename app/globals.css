@@ -138,3 +138,59 @@ body::-webkit-scrollbar {
     scroll-behavior: auto !important;
   }
 }
+
+/* ---------- Byte, the wandering site mascot (components/byte) ---------- */
+.byte-svg .byte-leg,
+.byte-svg .byte-torso,
+.byte-svg .byte-eyes {
+  transform-box: fill-box;
+}
+.byte-svg .byte-leg {
+  transform-origin: 50% 0%;
+}
+.byte-svg .byte-eyes {
+  transform-origin: 50% 50%;
+  animation: byte-blink 4.5s infinite;
+}
+.byte-walking .byte-leg-left {
+  animation: byte-step 0.36s ease-in-out infinite alternate;
+}
+.byte-walking .byte-leg-right {
+  animation: byte-step 0.36s ease-in-out infinite alternate-reverse;
+}
+.byte-walking .byte-torso {
+  animation: byte-bob 0.18s ease-in-out infinite alternate;
+}
+.byte-antenna-blink {
+  animation: byte-pulse 0.6s ease-in-out infinite alternate;
+}
+.byte-zzz {
+  animation: byte-zzz 2.4s ease-out infinite;
+}
+@keyframes byte-step {
+  from { transform: rotate(-14deg); }
+  to   { transform: rotate(14deg); }
+}
+@keyframes byte-bob {
+  from { transform: translateY(0); }
+  to   { transform: translateY(-1.5px); }
+}
+@keyframes byte-blink {
+  0%, 92%, 100% { transform: scaleY(1); }
+  95%           { transform: scaleY(0.1); }
+}
+@keyframes byte-pulse {
+  from { opacity: 0.35; }
+  to   { opacity: 1; }
+}
+@keyframes byte-zzz {
+  0%   { opacity: 0; transform: translate(0, 0) scale(0.7); }
+  30%  { opacity: 1; }
+  100% { opacity: 0; transform: translate(10px, -22px) scale(1.1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .byte-svg *,
+  .byte-zzz {
+    animation: none !important;
+  }
+}

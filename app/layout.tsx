@@ -6,6 +6,7 @@ import ScrollProgress from "@/components/layout/ScrollProgress";
 import CustomCursor from "@/components/layout/CustomCursor";
 import PageTransition from "@/components/layout/PageTransition";
 import GlyphField from "@/components/layout/GlyphField";
+import Byte from "@/components/byte/Byte";
 import { Inter, Source_Code_Pro, Pixelify_Sans } from "next/font/google";
 import { profile } from "@/lib/data";
 
@@ -122,6 +123,7 @@ export default function RootLayout({
           <main id="main-content">{children}</main>
         </PageTransition>
         <Footer />
+        <Byte />
       </body>
     </html>
   );
