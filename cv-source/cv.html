@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Paul Anthony Pancho — CV</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Code+Pro:wght@500;600&display=block" rel="stylesheet">
+<style>
+  @page { size: A4; margin: 0; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body { font-family: Inter, Arial, sans-serif; color: #1d1f23; font-size: 9.1pt; line-height: 1.34; }
+  .page { width: 210mm; min-height: 297mm; padding: 11mm 14mm 8mm; }
+  .bar { height: 4px; background: linear-gradient(90deg, #ECA35F, #7FA88B, #7AA5C4); margin: -11mm -14mm 8mm; }
+  header h1 { margin: 0; font-size: 21pt; letter-spacing: -0.01em; line-height: 1.1; }
+  header .role { margin-top: 3px; font-family: "Source Code Pro", monospace; font-size: 10.5pt; color: #b5671f; font-weight: 600; }
+  .contact { margin-top: 7px; display: flex; flex-wrap: wrap; gap: 2px 14px; font-size: 8.8pt; color: #44474d; }
+  .contact a { color: #44474d; text-decoration: none; }
+  h2 { margin: 9px 0 5px; padding-bottom: 2px; border-bottom: 1.2px solid #e2ddd4; font-family: "Source Code Pro", monospace;
+       font-size: 9.6pt; letter-spacing: 0.18em; text-transform: uppercase; color: #b5671f; }
+  p { margin: 0; }
+  .item { margin-bottom: 5px; }
+  .row { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+  .title { font-weight: 700; font-size: 10.2pt; }
+  .meta { color: #5b5f66; font-size: 8.8pt; white-space: nowrap; }
+  .sub { color: #3c4046; font-weight: 500; }
+  .stack { font-family: "Source Code Pro", monospace; font-size: 8.3pt; color: #4f7a5d; margin-top: 1px; }
+  ul { margin: 3px 0 0; padding-left: 15px; }
+  li { margin: 1px 0; }
+  .skills { display: grid; grid-template-columns: 92px 1fr; gap: 3px 10px; }
+  .skills b { font-weight: 600; }
+  a.link { color: #2f6f97; text-decoration: none; }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="bar"></div>
+  <header>
+    <h1>Paul Anthony Pancho</h1>
+    <div class="role">Full-Stack Developer · BS Information Technology Student</div>
+    <div class="contact">
+      <span>paulanthonybucadpancho1122@gmail.com</span>
+      <a href="https://pancheezy.vercel.app">pancheezy.vercel.app</a>
+      <a href="https://github.com/pancheeze">github.com/pancheeze</a>
+      <a href="https://www.linkedin.com/in/paul-pancho-76b8103a5/">linkedin.com/in/paul-pancho-76b8103a5</a>
+      <span>Philippines</span>
+    </div>
+  </header>
+
+  <h2>Summary</h2>
+  <p>4th-year BS Information Technology student at the Polytechnic University of the Philippines and a full-stack developer
+  who likes owning a feature end to end, from the MySQL database and PHP backend to a responsive interface. Lead programmer
+  of our capstone, ChickDetect, an offline machine-learning app, and of a team e-commerce system. President's Lister since
+  first year. Open to internships and collaborations.</p>
+
+  <h2>Education</h2>
+  <div class="item">
+    <div class="row"><span class="title">BS Information Technology</span><span class="meta">2023 – 2027 (expected)</span></div>
+    <div class="sub">Polytechnic University of the Philippines – Sto. Tomas Campus</div>
+    <ul>
+      <li>President's Lister since first year</li>
+      <li>Capstone: ChickDetect (lead programmer)</li>
+    </ul>
+  </div>
+  <div class="item">
+    <div class="row"><span class="title">Senior High School, STEM Strand</span><span class="meta">2021 – 2023</span></div>
+    <div class="sub">Tanauan Institute · Consistent honor student from Grade 11 onward</div>
+  </div>
+
+  <h2>Projects</h2>
+  <div class="item">
+    <div class="row"><span class="title">ChickDetect <span class="sub">· Capstone, Lead Programmer</span></span><span class="meta"><a class="link" href="https://github.com/pancheeze/ChickDetect">github.com/pancheeze/ChickDetect</a></span></div>
+    <div class="stack">Flutter · Dart · TensorFlow Lite</div>
+    <ul>
+      <li>Built the original mobile app: camera capture, scan flow and scan history</li>
+      <li>Integrated an on-device TensorFlow Lite model that screens chicken droppings for coccidiosis, salmonella and Newcastle disease, fully offline</li>
+      <li>Team v2 reached 96.56% test accuracy across 5 classes and shipped with a download website</li>
+    </ul>
+  </div>
+  <div class="item">
+    <div class="row"><span class="title">Motoshapi <span class="sub">· Team of 4, Lead Programmer</span></span><span class="meta"><a class="link" href="https://github.com/pancheeze/motoshapi-final-project-">github.com/pancheeze/motoshapi-final-project-</a></span></div>
+    <div class="stack">PHP · MySQL · JavaScript · PayPal REST API · SMSGate · Ollama</div>
+    <ul>
+      <li>Full-stack e-commerce system for motorcycle parts with an admin panel; authored 22 of the team's 30 commits</li>
+      <li>Integrated automatic two-way SMS order notifications and order-status emails; finished the PayPal checkout</li>
+      <li>Redesigned the full UI, moved the AI shopping assistant to a local Ollama model, and reviewed and merged the team's pull requests</li>
+    </ul>
+  </div>
+  <div class="item">
+    <div class="row"><span class="title">Swish Streak <span class="sub">· Solo project</span></span><span class="meta"><a class="link" href="https://pancheeze.itch.io/swish-streak">pancheeze.itch.io/swish-streak</a></span></div>
+    <div class="stack">Unity 6 · C#</div>
+    <ul><li>3D basketball game with a timing-based shot meter, physics-driven misses and streak scoring, published on itch.io</li></ul>
+  </div>
+  <div class="item">
+    <div class="row"><span class="title">MineVentory</span><span class="meta"><a class="link" href="https://pancheeze.github.io/mineventory_api/">pancheeze.github.io/mineventory_api</a></span></div>
+    <div class="stack">JavaScript · REST API · Bootstrap</div>
+    <ul><li>Searchable catalog of 1,179 Minecraft items from a public REST API, with filters and a fallback to saved data when the API is down</li></ul>
+  </div>
+
+  <h2>Leadership &amp; Activities</h2>
+  <div class="item">
+    <div class="row"><span class="title">Chief Illustrator</span><span class="meta">2025 – Present</span></div>
+    <div class="sub">The Searcher · PUP student publication</div>
+    <ul><li>Lead the publication's illustration work, creating artwork for its stories and issues</li></ul>
+  </div>
+
+  <h2>Skills</h2>
+  <div class="skills">
+    <b>Languages</b><span>JavaScript, TypeScript, PHP, Python, C, C++, C#, Dart</span>
+    <b>Web</b><span>React, Next.js, HTML, CSS, Bootstrap, REST APIs</span>
+    <b>Mobile &amp; AI</b><span>Flutter, TensorFlow Lite</span>
+    <b>Database</b><span>MySQL</span>
+    <b>Tools</b><span>Git, GitHub, Unity, Adobe Photoshop</span>
+  </div>
+
+  <h2>Certificates</h2>
+  <div class="row"><span><b>From Algorithms to Intelligence: The Journey to AI and Machine Learning</b> · PUP Sto. Tomas Computer Society</span><span class="meta">Dec 2025</span></div>
+</div>
+</body>
+</html>

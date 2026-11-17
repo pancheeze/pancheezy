@@ -59,12 +59,16 @@ export const profile = {
 
 export const skills: Skill[] = [
   { name: "JavaScript", category: "Programming" },
+  { name: "TypeScript", category: "Programming" },
+  { name: "Python", category: "Programming" },
   { name: "C", category: "Programming" },
   { name: "C++", category: "Programming" },
   { name: "C#", category: "Programming" },
   { name: "HTML", category: "Frontend" },
   { name: "CSS", category: "Frontend" },
   { name: "Bootstrap", category: "Frontend" },
+  { name: "React", category: "Frontend" },
+  { name: "Next.js", category: "Frontend" },
   { name: "PHP", category: "Backend" },
   { name: "REST APIs", category: "Backend" },
   { name: "MySQL", category: "Database" },
