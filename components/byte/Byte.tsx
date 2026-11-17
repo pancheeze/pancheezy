@@ -4,19 +4,19 @@ import { CSSProperties, FormEvent, Fragment, PointerEvent as ReactPointerEvent, 
 import { AnimatePresence, motion } from "framer-motion";
 import { Send, X } from "lucide-react";
 import PixelSprite from "./PixelSprite";
-import { byteFrame, Face, GRID_H, GRID_W, ICON_FRAME, Legs } from "./sprites";
+import { byteFrame, decryptFrame, Face, GRID_H, GRID_W, ICON_FRAME, Legs, Pixel } from "./sprites";
 import { suggestedQuestions } from "@/lib/byte";
 import { profile } from "@/lib/data";
 
 // Byte: a pixel-art terminal robot that wanders along the bottom of the screen.
-//   tap        -> his pixels fly apart and rebuild as a chat icon, and the chat opens
+//   tap        -> he "decrypts" into a pixel chat icon (like the loading screen), and the chat opens
 //   drag       -> he dangles ("whoa!"); throw him and he bounces around
 //   shake      -> he gets dizzy
 //   hold still -> petting: heart eyes and floating hearts
 // Answers come from /api/byte (AI with a scripted fallback).
 
 const W = GRID_W * 4; // 72px
-const H = GRID_H * 4; // 80px
+const H = GRID_H * 4; // 76px
 const EDGE = 12;
 const BOTTOM = 12;
 const WALK_SPEED = 70; // px/s
@@ -24,7 +24,8 @@ const GLIDE_SPEED = 1100; // px/s, running to the corner when the chat opens
 const GRAVITY = 2600; // px/s^2
 const DRAG_THRESHOLD = 6; // px before a press counts as a grab
 const PET_DELAY = 500; // ms holding still before it counts as petting
-const MORPH_MS = 650;
+const DECRYPT_MS = 700;
+const DECRYPT_TICK = 45; // same tick as the loading screen
 const MAX_INPUT = 300;
 
 type Mode = "idle" | "walk" | "sleep" | "held" | "air" | "dizzy" | "pet" | "glide" | "icon";
@@ -81,7 +82,7 @@ export default function Byte() {
   const [ready, setReady] = useState(false);
   const [mode, setModeState] = useState<Mode>("idle");
   const [form, setForm] = useState<"byte" | "icon">("byte");
-  const [morphing, setMorphing] = useState(false);
+  const [scramble, setScramble] = useState<Pixel[] | null>(null);
   const [facing, setFacing] = useState<1 | -1>(-1);
   const [step, setStep] = useState(0);
   const [blink, setBlink] = useState(false);
@@ -109,6 +110,9 @@ export default function Byte() {
   const wanderTimer = useRef<ReturnType<typeof setTimeout>>();
   const bubbleTimer = useRef<ReturnType<typeof setTimeout>>();
   const elRef = useRef<HTMLDivElement>(null);
+  const shadowRef = useRef<HTMLDivElement>(null);
+  const decrypting = useRef(false);
+  const shown = useRef<Pixel[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const press = useRef<{
@@ -273,6 +277,12 @@ export default function Byte() {
       }
 
       if (elRef.current) elRef.current.style.transform = `translate3d(${p.x}px, ${-p.y}px, 0)`;
+      if (shadowRef.current) {
+        // The shadow stays on the ground and shrinks the higher he goes.
+        const sc = Math.max(0.35, 1 - p.y / 350);
+        shadowRef.current.style.transform = `translate3d(${p.x + 12}px, 0, 0) scaleX(${sc})`;
+        shadowRef.current.style.opacity = String(0.55 * sc);
+      }
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
@@ -352,7 +362,29 @@ export default function Byte() {
     return () => clearInterval(id);
   }, [mode]);
 
-  // ----- Chat open / close (with the pixel morph) -----
+  // ----- Chat open / close (with the "decrypt" transition) -----
+  const runDecrypt = useCallback((to: Pixel[], done?: () => void) => {
+    const from = shown.current;
+    if (reduced.current) {
+      done?.();
+      return;
+    }
+    decrypting.current = true;
+    setScramble(decryptFrame(from, to, 0));
+    const start = performance.now();
+    const id = setInterval(() => {
+      const t = (performance.now() - start) / DECRYPT_MS;
+      if (t >= 1) {
+        clearInterval(id);
+        decrypting.current = false;
+        setScramble(null);
+        done?.();
+        return;
+      }
+      setScramble(decryptFrame(from, to, t));
+    }, DECRYPT_TICK);
+  }, []);
+
   const openChat = useCallback(() => {
     clearTimeout(wanderTimer.current);
     openRef.current = true;
@@ -360,30 +392,25 @@ export default function Byte() {
     shakenRef.current = false;
     setShaken(false);
     setFacing(1);
-    setMorphing(true);
     setForm("icon");
+    runDecrypt(ICON_FRAME);
     target.current = maxX();
     onArrive.current = () => setMode("icon");
     setMode(reduced.current ? "icon" : "glide");
     if (reduced.current) pos.current = { x: maxX(), y: 0, vx: 0, vy: 0 };
-    setTimeout(() => setOpen(true), reduced.current ? 0 : 420);
-    setTimeout(() => setMorphing(false), MORPH_MS + 200);
-  }, [say, setMode]);
+    setTimeout(() => setOpen(true), reduced.current ? 0 : DECRYPT_MS - 150);
+  }, [runDecrypt, say, setMode]);
 
   const closeChat = useCallback(() => {
     setOpen(false);
     openRef.current = false;
     setTimeout(() => {
-      setMorphing(true);
       setForm("byte");
       setMode("idle");
-      setTimeout(() => {
-        setMorphing(false);
-        say(pick(["bye for now!", "come back anytime!", "beep boop!"]));
-      }, MORPH_MS + 200);
-      settle(2200);
+      runDecrypt(byteFrame("happy", "stand", 0), () => say(pick(["bye for now!", "come back anytime!", "beep boop!"])));
+      settle(2400);
     }, 180);
-  }, [say, setMode, settle]);
+  }, [runDecrypt, say, setMode, settle]);
 
   const toggleChat = () => (openRef.current ? closeChat() : openChat());
 
@@ -401,7 +428,7 @@ export default function Byte() {
 
   // ----- Pointer: tap, drag, throw, shake, pet -----
   const onPointerDown = (e: ReactPointerEvent<HTMLButtonElement>) => {
-    if (e.button !== 0 || morphing) return;
+    if (e.button !== 0 || decrypting.current) return;
     const p = pos.current;
     const top = window.innerHeight - BOTTOM - H - p.y;
     press.current = {
@@ -555,7 +582,9 @@ export default function Byte() {
   }
   if (mode === "dizzy") face = "dizzy";
   if (mode === "pet") face = "love";
-  const pixels = form === "icon" ? ICON_FRAME : byteFrame(face, legs, look);
+  const settled = form === "icon" ? ICON_FRAME : byteFrame(face, legs, look);
+  if (!scramble) shown.current = settled;
+  const pixels = scramble ?? settled;
   const showBubble = !!bubble && form === "byte" && !open && mode !== "sleep";
   const lifted = hovered && (mode === "idle" || mode === "walk") && !reduced.current;
 
@@ -655,6 +684,14 @@ export default function Byte() {
         )}
       </AnimatePresence>
 
+      {/* Ground shadow (pixel style), moved by the animation loop. */}
+      <div
+        ref={shadowRef}
+        aria-hidden
+        className="pointer-events-none fixed left-0 z-[79] h-1 w-12 origin-center bg-black"
+        style={{ bottom: BOTTOM + 2, display: form === "icon" && !scramble ? "none" : undefined }}
+      />
+
       {/* Byte himself. Position is set every frame by the animation loop. */}
       <div
         ref={elRef}
@@ -670,7 +707,7 @@ export default function Byte() {
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: 6, scale: 0.8 }}
                 transition={{ duration: 0.18 }}
-                className={`byte-bubble absolute bottom-[84px] whitespace-nowrap bg-white px-3 py-1.5 font-pixel text-xs text-[#080A0D] ${
+                className={`byte-bubble absolute bottom-[80px] whitespace-nowrap bg-white px-3 py-1.5 font-pixel text-xs text-[#080A0D] ${
                   bubbleSide === "right" ? "right-4 origin-bottom-right" : "left-4 origin-bottom-left"
                 }`}
               >
@@ -728,7 +765,7 @@ export default function Byte() {
               className="block transition-transform duration-150"
               style={{ transform: `translateY(${lifted ? -8 : 0}px) scaleX(${form === "icon" ? 1 : facing})` }}
             >
-              <PixelSprite pixels={pixels} morphing={morphing} typing={thinking} />
+              <PixelSprite pixels={pixels} typing={thinking} />
             </span>
           </button>
         </div>

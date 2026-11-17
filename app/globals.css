@@ -140,13 +140,6 @@ body::-webkit-scrollbar {
 }
 
 /* ---------- Byte, the wandering pixel mascot (components/byte) ---------- */
-.byte-pixels rect {
-  transition: none;
-}
-/* Byte <-> chat icon morph: every pixel flies to its new spot. */
-.byte-morphing rect {
-  transition: transform 0.55s cubic-bezier(0.65, 0, 0.35, 1), fill 0.55s ease, opacity 0.35s ease;
-}
 /* Chat icon dots bounce like a typing indicator while Byte is answering. */
 .byte-typing .byte-dot1,
 .byte-typing .byte-dot2,
@@ -185,11 +178,9 @@ body::-webkit-scrollbar {
   100% { opacity: 0; transform: translateY(-36px); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .byte-morphing rect,
   .byte-zzz,
   .byte-heart,
   .byte-typing rect {
-    transition: none !important;
     animation: none !important;
   }
 }
