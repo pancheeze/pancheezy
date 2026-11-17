@@ -110,7 +110,6 @@ export default function Byte() {
   const wanderTimer = useRef<ReturnType<typeof setTimeout>>();
   const bubbleTimer = useRef<ReturnType<typeof setTimeout>>();
   const elRef = useRef<HTMLDivElement>(null);
-  const shadowRef = useRef<HTMLDivElement>(null);
   const decrypting = useRef(false);
   const shown = useRef<Pixel[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -277,12 +276,6 @@ export default function Byte() {
       }
 
       if (elRef.current) elRef.current.style.transform = `translate3d(${p.x}px, ${-p.y}px, 0)`;
-      if (shadowRef.current) {
-        // The shadow stays on the ground and shrinks the higher he goes.
-        const sc = Math.max(0.35, 1 - p.y / 350);
-        shadowRef.current.style.transform = `translate3d(${p.x + 12}px, 0, 0) scaleX(${sc})`;
-        shadowRef.current.style.opacity = String(0.55 * sc);
-      }
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
@@ -683,14 +676,6 @@ export default function Byte() {
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* Ground shadow (pixel style), moved by the animation loop. */}
-      <div
-        ref={shadowRef}
-        aria-hidden
-        className="pointer-events-none fixed left-0 z-[79] h-1 w-12 origin-center bg-black"
-        style={{ bottom: BOTTOM + 2, display: form === "icon" && !scramble ? "none" : undefined }}
-      />
 
       {/* Byte himself. Position is set every frame by the animation loop. */}
       <div
