@@ -5,7 +5,8 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Send, X } from "lucide-react";
 import PixelSprite from "./PixelSprite";
 import { byteFrame, decryptFrame, Face, GRID_H, GRID_W, ICON_FRAME, Legs, Pixel } from "./sprites";
-import { suggestedQuestions } from "@/lib/byte";
+import Link from "next/link";
+import { actionsFor, ByteAction, suggestedQuestions } from "@/lib/byte";
 import { profile } from "@/lib/data";
 
 // Byte: a pixel-art terminal robot that wanders along the bottom of the screen.
@@ -27,6 +28,9 @@ const PET_DELAY = 500; // ms holding still before it counts as petting
 const DECRYPT_MS = 700;
 const DECRYPT_TICK = 45; // same tick as the loading screen
 const MAX_INPUT = 300;
+const PARK_BELOW = 768; // px: on narrower screens Byte stays in the corner instead of wandering over content
+const CHAT_KEY = "byte-chat-v1"; // sessionStorage: the chat survives closing Byte and changing pages
+const MAX_SAVED = 40;
 
 type Mode = "idle" | "walk" | "sleep" | "held" | "air" | "dizzy" | "pet" | "glide" | "icon";
 type Msg = { role: "user" | "assistant"; content: string };
@@ -36,6 +40,31 @@ const GREETING: Msg = {
   role: "assistant",
   content: `Beep boop! I'm Byte, ${firstName}'s little helper bot. Ask me anything about him: his projects, skills, or how to reach him.`,
 };
+
+function loadChat(): Msg[] {
+  if (typeof window === "undefined") return [GREETING];
+  try {
+    const saved: unknown = JSON.parse(sessionStorage.getItem(CHAT_KEY) ?? "null");
+    if (!Array.isArray(saved)) return [GREETING];
+    const valid = saved.filter(
+      (m): m is Msg => (m?.role === "user" || m?.role === "assistant") && typeof m?.content === "string"
+    );
+    return valid.length > 1 ? valid : [GREETING];
+  } catch {
+    return [GREETING];
+  }
+}
+
+function saveChat(messages: Msg[]) {
+  try {
+    if (messages.length > 1) sessionStorage.setItem(CHAT_KEY, JSON.stringify([GREETING, ...messages.slice(1).slice(-MAX_SAVED)]));
+  } catch {
+    // Private mode or storage blocked: the chat just won't be remembered.
+  }
+}
+
+const actionClass =
+  "inline-flex items-center gap-1 rounded-full border border-secondary/40 px-2.5 py-1 text-xs text-secondary transition-colors hover:bg-secondary/10";
 
 const rand = (min: number, max: number) => min + Math.random() * (max - min);
 const pick = <T,>(items: T[]) => items[Math.floor(Math.random() * items.length)];
@@ -94,9 +123,10 @@ export default function Byte() {
   const [hearts, setHearts] = useState<number[]>([]);
 
   const [open, setOpen] = useState(false);
-  const [messages, setMessages] = useState<Msg[]>([GREETING]);
+  const [messages, setMessages] = useState<Msg[]>(loadChat);
   const [input, setInput] = useState("");
   const [thinking, setThinking] = useState(false);
+  const [typingElsewhere, setTypingElsewhere] = useState(false);
 
   // Movement lives in refs and is drawn straight to the DOM every frame.
   const pos = useRef({ x: 0, y: 0, vx: 0, vy: 0 });
@@ -105,6 +135,8 @@ export default function Byte() {
   const onArrive = useRef<(() => void) | null>(null);
   const flight = useRef({ impact: 0 });
   const reduced = useRef(false);
+  const parked = useRef(false);
+  const dialogRef = useRef<HTMLDivElement>(null);
   const shakenRef = useRef(false);
   const openRef = useRef(false);
   const wanderTimer = useRef<ReturnType<typeof setTimeout>>();
@@ -160,6 +192,25 @@ export default function Byte() {
       if (reduced.current || openRef.current) return;
       const roll = forceWalk ? 0 : Math.random();
       const schedule = (ms: number) => (wanderTimer.current = setTimeout(() => nextAction(), ms));
+
+      // Phones and small tablets: stay parked in the bottom-right corner so he never covers the page.
+      if (parked.current) {
+        if (Math.abs(pos.current.x - maxX()) > 2) {
+          walkTo(maxX(), () => {
+            setMode("idle");
+            setFacing(-1);
+            schedule(rand(3000, 6000));
+          });
+        } else if (Math.random() < 0.3) {
+          setMode("sleep");
+          say(null);
+          schedule(rand(8000, 12000));
+        } else {
+          setMode("idle");
+          schedule(rand(4000, 7000));
+        }
+        return;
+      }
 
       if (roll < 0.6) {
         let x = rand(EDGE, maxX());
@@ -285,7 +336,8 @@ export default function Byte() {
   // ----- Start -----
   useEffect(() => {
     reduced.current = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const start = Math.max(EDGE, maxX() - 40);
+    parked.current = window.innerWidth < PARK_BELOW;
+    const start = parked.current ? maxX() : Math.max(EDGE, maxX() - 40);
     pos.current.x = start;
     target.current = start;
     setReady(true);
@@ -306,6 +358,7 @@ export default function Byte() {
   // Keep Byte on screen when the window is resized.
   useEffect(() => {
     const onResize = () => {
+      parked.current = window.innerWidth < PARK_BELOW;
       const p = pos.current;
       p.x = Math.min(p.x, maxX());
       p.y = Math.min(p.y, maxY());
@@ -314,6 +367,23 @@ export default function Byte() {
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
   }, []);
+
+  // Step out of the way while the visitor types in a form on the page (e.g. the contact form).
+  useEffect(() => {
+    const isField = (el: EventTarget | null) =>
+      el instanceof HTMLElement && el.matches("input, textarea, select, [contenteditable='true']") && !dialogRef.current?.contains(el);
+    const onFocusIn = (e: FocusEvent) => isField(e.target) && setTypingElsewhere(true);
+    const onFocusOut = (e: FocusEvent) => isField(e.target) && !isField(e.relatedTarget) && setTypingElsewhere(false);
+    document.addEventListener("focusin", onFocusIn);
+    document.addEventListener("focusout", onFocusOut);
+    return () => {
+      document.removeEventListener("focusin", onFocusIn);
+      document.removeEventListener("focusout", onFocusOut);
+    };
+  }, []);
+
+  // Remember the conversation for this visit.
+  useEffect(() => saveChat(messages), [messages]);
 
   // Blink now and then.
   useEffect(() => {
@@ -552,6 +622,33 @@ export default function Byte() {
     }
   };
 
+  const goToSection = (id: string) => {
+    closeChat();
+    const el = document.getElementById(id);
+    if (el) setTimeout(() => el.scrollIntoView({ behavior: reduced.current ? "auto" : "smooth" }), 250);
+    else window.location.href = `/#${id}`; // on a project page: go back to the home page section
+  };
+
+  const renderAction = (a: ByteAction) => {
+    if (a.kind === "link")
+      return (
+        <Link key={a.href} href={a.href} onClick={closeChat} className={actionClass}>
+          {a.label} →
+        </Link>
+      );
+    if (a.kind === "download")
+      return (
+        <a key={a.href} href={a.href} download className={actionClass}>
+          {a.label} ↓
+        </a>
+      );
+    return (
+      <button key={a.id} type="button" onClick={() => goToSection(a.id)} className={actionClass}>
+        {a.label} →
+      </button>
+    );
+  };
+
   const onSubmit = (e: FormEvent) => {
     e.preventDefault();
     ask(input);
@@ -578,7 +675,8 @@ export default function Byte() {
   const settled = form === "icon" ? ICON_FRAME : byteFrame(face, legs, look);
   if (!scramble) shown.current = settled;
   const pixels = scramble ?? settled;
-  const showBubble = !!bubble && form === "byte" && !open && mode !== "sleep";
+  const hideForForm = typingElsewhere && !open;
+  const showBubble = !!bubble && form === "byte" && !open && mode !== "sleep" && !hideForForm;
   const lifted = hovered && (mode === "idle" || mode === "walk") && !reduced.current;
 
   return (
@@ -587,6 +685,7 @@ export default function Byte() {
       <AnimatePresence>
         {open && (
           <motion.div
+            ref={dialogRef}
             role="dialog"
             aria-label={`Chat with Byte about ${firstName}`}
             initial={{ opacity: 0, y: 16, scale: 0.96 }}
@@ -609,8 +708,10 @@ export default function Byte() {
             </div>
 
             <div ref={listRef} className="flex-1 space-y-3 overflow-y-auto px-4 py-4" aria-live="polite">
-              {messages.map((m, i) => (
-                <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
+              {messages.map((m, i) => {
+                const actions = m.role === "assistant" && i > 0 ? actionsFor(m.content) : [];
+                return (
+                <div key={i} className={`flex flex-col ${m.role === "user" ? "items-end" : "items-start"}`}>
                   <p
                     className={`max-w-[85%] whitespace-pre-line rounded-2xl px-3.5 py-2 text-sm leading-relaxed ${
                       m.role === "user"
@@ -620,8 +721,10 @@ export default function Byte() {
                   >
                     {m.role === "assistant" ? <Linkified text={m.content} /> : m.content}
                   </p>
+                  {actions.length > 0 && <div className="mt-2 flex flex-wrap gap-1.5">{actions.map(renderAction)}</div>}
                 </div>
-              ))}
+                );
+              })}
               {thinking && (
                 <div className="flex justify-start" aria-label="Byte is typing">
                   <p className="flex gap-1 rounded-2xl rounded-bl-sm border border-white/10 bg-base/60 px-3.5 py-3">
@@ -683,7 +786,10 @@ export default function Byte() {
         className="pointer-events-none fixed left-0 z-[80] will-change-transform"
         style={{ bottom: BOTTOM }}
       >
-        <div className="relative">
+        <div
+          className={`relative transition-opacity duration-200 ${hideForForm ? "invisible opacity-0" : "opacity-100"}`}
+          aria-hidden={hideForForm || undefined}
+        >
           <AnimatePresence>
             {showBubble && (
               <motion.div

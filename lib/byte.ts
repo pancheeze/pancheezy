@@ -70,6 +70,7 @@ ${buildKnowledge()}`;
 type Rule = { keys: string[]; answer: () => string };
 
 const list = (items: string[]) => items.map((i) => `- ${i}`).join("\n");
+const firstSentence = (s: string) => s.match(/^.*?[.!?](?=\s|$)/)?.[0] ?? s;
 
 const rules: Rule[] = [
   {
@@ -103,7 +104,7 @@ const rules: Rule[] = [
   {
     keys: ["project", "built", "made", "portfolio", "work on", "works"],
     answer: () =>
-      `${firstName} has built:\n${list(projects.map((p) => `${p.name}: ${p.category}`))}\nAsk me about any of them!`,
+      `${firstName} has built:\n${list(projects.map((p) => `${p.name}: ${firstSentence(p.description)}`))}\nAsk me about any of them!`,
   },
   {
     keys: ["school", "study", "studies", "student", "university", "college", "pup", "education", "degree", "course", "year"],
@@ -160,6 +161,33 @@ export function scriptedAnswer(question: string): string {
   if (rule) return rule.answer();
 
   return `Hmm, I'm not sure about that one. I only know about ${firstName}! Try asking about his projects, skills, school, or how to contact him.`;
+}
+
+// ---------- Action buttons under Byte's replies ----------
+
+export type ByteAction =
+  | { kind: "link"; label: string; href: string }
+  | { kind: "section"; label: string; id: string }
+  | { kind: "download"; label: string; href: string };
+
+const has = (text: string, words: string[]) => words.some((w) => text.includes(w));
+
+/** Buttons that take the visitor to what a reply talks about (works for AI and scripted replies). */
+export function actionsFor(reply: string): ByteAction[] {
+  const r = reply.toLowerCase();
+  const actions: ByteAction[] = [];
+
+  const mentioned = projects.filter((p) => r.includes(p.name.toLowerCase()));
+  if (mentioned.length > 2) actions.push({ kind: "section", label: "See all projects", id: "projects" });
+  else mentioned.forEach((p) => actions.push({ kind: "link", label: `Open ${p.name}`, href: `/projects/${p.slug}` }));
+
+  if (has(r, ["contact form", profile.email.toLowerCase(), "reach him", "get in touch"]))
+    actions.push({ kind: "section", label: "Open contact form", id: "contact" });
+  if (profile.cvUrl && has(r, [profile.cvUrl.toLowerCase(), " cv", "resume"]))
+    actions.push({ kind: "download", label: "Download CV", href: profile.cvUrl });
+  if (r.includes("works with")) actions.push({ kind: "section", label: "See skills", id: "skills" });
+
+  return actions.slice(0, 3);
 }
 
 export const suggestedQuestions = [
