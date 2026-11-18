@@ -28,7 +28,12 @@ const PET_DELAY = 500; // ms holding still before it counts as petting
 const DECRYPT_MS = 700;
 const DECRYPT_TICK = 45; // same tick as the loading screen
 const MAX_INPUT = 300;
-const PARK_BELOW = 768; // px: on narrower screens Byte stays in the corner instead of wandering over content
+const PARK_BELOW = 768; // px: on narrower screens (and any touch screen) Byte stays in the corner
+const MET_KEY = "byte-met"; // sessionStorage: the curious glow stops after the first tap
+const GLYPH_CHARS = "01#$%<>/*+=;";
+const GLOW_COLORS = ["#ECA35F", "#7FA88B", "#7AA5C4"]; // same order and 6s loop as .byte-glow in globals.css
+const GLOW_CYCLE_MS = 6000;
+const TYPE_MS = 38; // per character in the terminal prompt
 const CHAT_KEY = "byte-chat-v1"; // sessionStorage: the chat survives closing Byte and changing pages
 const MAX_SAVED = 40;
 
@@ -36,6 +41,7 @@ type Mode = "idle" | "walk" | "sleep" | "held" | "air" | "dizzy" | "pet" | "glid
 type Msg = { role: "user" | "assistant"; content: string };
 
 const firstName = profile.name.split(" ")[0];
+const ASK_ME = `ask me about ${firstName.toLowerCase()}`;
 const GREETING: Msg = {
   role: "assistant",
   content: `Beep boop! I'm Byte, ${firstName}'s little helper bot. Ask me anything about him: his projects, skills, or how to reach him.`,
@@ -61,6 +67,60 @@ function saveChat(messages: Msg[]) {
   } catch {
     // Private mode or storage blocked: the chat just won't be remembered.
   }
+}
+
+function hasMetByte(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    return sessionStorage.getItem(MET_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+const shouldPark = () => window.innerWidth < PARK_BELOW || window.matchMedia("(pointer: coarse)").matches;
+const randomGlyph = () => GLYPH_CHARS[Math.floor(Math.random() * GLYPH_CHARS.length)];
+
+/** A glyph that scrambles for a moment (like the loading screen), then drifts up and fades (CSS). */
+function DecryptGlyph({ x, y, color }: { x: number; y: number; color: string }) {
+  const [ch, setCh] = useState(randomGlyph);
+  useEffect(() => {
+    let n = 0;
+    const id = setInterval(() => {
+      setCh(randomGlyph());
+      if (++n >= 8) clearInterval(id);
+    }, 80);
+    return () => clearInterval(id);
+  }, []);
+  return (
+    <span aria-hidden className="byte-glyph font-mono" style={{ left: x, top: y, color }}>
+      {ch}
+    </span>
+  );
+}
+
+/** Types the text out like a terminal, with a blinking block cursor. Width is reserved so it doesn't jitter. */
+function TypedPrompt({ text, instant }: { text: string; instant: boolean }) {
+  const [shown, setShown] = useState(instant ? text.length : 0);
+  useEffect(() => {
+    if (instant) return;
+    const id = setInterval(() => setShown((n) => (n >= text.length ? n : n + 1)), TYPE_MS);
+    return () => clearInterval(id);
+  }, [text, instant]);
+  const caret = <span className="byte-caret ml-0.5 inline-block h-[0.95em] w-[0.5em] translate-y-[2px] bg-primary/80" />;
+  return (
+    <span className="relative inline-block">
+      <span className="invisible">
+        &gt; {text}
+        {caret}
+      </span>
+      <span className="absolute inset-0">
+        <span className="text-secondary">&gt; </span>
+        {text.slice(0, shown)}
+        {caret}
+      </span>
+    </span>
+  );
 }
 
 const actionClass =
@@ -127,6 +187,10 @@ export default function Byte() {
   const [input, setInput] = useState("");
   const [thinking, setThinking] = useState(false);
   const [typingElsewhere, setTypingElsewhere] = useState(false);
+  const [curious, setCurious] = useState(() => !hasMetByte());
+  const [glyphs, setGlyphs] = useState<{ id: number; x: number; y: number; color: string }[]>([]);
+  // Starts the CSS color loop at the same point as the JS clock, so glyphs match the glow's color.
+  const [glowDelay] = useState(() => (typeof performance === "undefined" ? 0 : -(performance.now() % GLOW_CYCLE_MS)));
 
   // Movement lives in refs and is drawn straight to the DOM every frame.
   const pos = useRef({ x: 0, y: 0, vx: 0, vy: 0 });
@@ -217,7 +281,7 @@ export default function Byte() {
         if (Math.abs(x - pos.current.x) < 80) x = pos.current.x > maxX() / 2 ? EDGE + rand(0, 60) : maxX() - rand(0, 60);
         walkTo(x, () => {
           setMode("idle");
-          if (Math.random() < 0.45) say("ask me!", 4500);
+          if (Math.random() < 0.45) say(ASK_ME, 4500);
           schedule(rand(2500, 5000));
         });
       } else if (roll < 0.88) {
@@ -336,17 +400,17 @@ export default function Byte() {
   // ----- Start -----
   useEffect(() => {
     reduced.current = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    parked.current = window.innerWidth < PARK_BELOW;
+    parked.current = shouldPark();
     const start = parked.current ? maxX() : Math.max(EDGE, maxX() - 40);
     pos.current.x = start;
     target.current = start;
     setReady(true);
     if (reduced.current) {
-      say("ask me!", 6000);
+      say(ASK_ME, 6000);
       return;
     }
     wanderTimer.current = setTimeout(() => {
-      say("ask me!", 4500);
+      say(ASK_ME, 4500);
       wanderTimer.current = setTimeout(() => nextAction(true), 3000);
     }, 2500);
     return () => {
@@ -358,7 +422,7 @@ export default function Byte() {
   // Keep Byte on screen when the window is resized.
   useEffect(() => {
     const onResize = () => {
-      parked.current = window.innerWidth < PARK_BELOW;
+      parked.current = shouldPark();
       const p = pos.current;
       p.x = Math.min(p.x, maxX());
       p.y = Math.min(p.y, maxY());
@@ -425,6 +489,24 @@ export default function Byte() {
     return () => clearInterval(id);
   }, [mode]);
 
+  // Decrypting glyphs drift off Byte while he's waiting to be found (2-3 at a time, in the glow's color).
+  const glyphsOn = curious && !open && form === "byte" && !typingElsewhere;
+  useEffect(() => {
+    if (!glyphsOn || reduced.current) return;
+    let n = 0;
+    const id = setInterval(() => {
+      const key = Date.now() * 10 + (n++ % 10);
+      const side = Math.random();
+      const x = side < 0.35 ? rand(-14, 4) : side < 0.7 ? rand(W - 12, W + 4) : rand(12, W - 22);
+      const y = side < 0.7 ? rand(12, 46) : rand(-6, 6);
+      const phase = (performance.now() % GLOW_CYCLE_MS) / GLOW_CYCLE_MS;
+      const color = GLOW_COLORS[Math.round(phase * GLOW_COLORS.length) % GLOW_COLORS.length];
+      setGlyphs((g) => [...g.slice(-2), { id: key, x, y, color }]);
+      setTimeout(() => setGlyphs((g) => g.filter((x) => x.id !== key)), 1800);
+    }, 650);
+    return () => clearInterval(id);
+  }, [glyphsOn]);
+
   // ----- Chat open / close (with the "decrypt" transition) -----
   const runDecrypt = useCallback((to: Pixel[], done?: () => void) => {
     const from = shown.current;
@@ -448,7 +530,18 @@ export default function Byte() {
     }, DECRYPT_TICK);
   }, []);
 
+  // The visitor found Byte: stop the curious glow for the rest of the visit.
+  const markMet = useCallback(() => {
+    setCurious(false);
+    try {
+      sessionStorage.setItem(MET_KEY, "1");
+    } catch {
+      // Storage blocked: the glow just comes back on the next page load.
+    }
+  }, []);
+
   const openChat = useCallback(() => {
+    markMet();
     clearTimeout(wanderTimer.current);
     openRef.current = true;
     say(null);
@@ -462,7 +555,7 @@ export default function Byte() {
     setMode(reduced.current ? "icon" : "glide");
     if (reduced.current) pos.current = { x: maxX(), y: 0, vx: 0, vy: 0 };
     setTimeout(() => setOpen(true), reduced.current ? 0 : DECRYPT_MS - 150);
-  }, [runDecrypt, say, setMode]);
+  }, [markMet, runDecrypt, say, setMode]);
 
   const closeChat = useCallback(() => {
     setOpen(false);
@@ -507,6 +600,7 @@ export default function Byte() {
       wasSleeping: modeRef.current === "sleep",
     };
     e.currentTarget.setPointerCapture(e.pointerId);
+    markMet();
     if (openRef.current) return; // the chat icon only taps
     press.current.petTimer = setTimeout(() => {
       if (!press.current || press.current.dragging) return;
@@ -633,18 +727,18 @@ export default function Byte() {
     if (a.kind === "link")
       return (
         <Link key={a.href} href={a.href} onClick={closeChat} className={actionClass}>
-          {a.label} →
+          {a.label} â†’
         </Link>
       );
     if (a.kind === "download")
       return (
         <a key={a.href} href={a.href} download className={actionClass}>
-          {a.label} ↓
+          {a.label} â†“
         </a>
       );
     return (
       <button key={a.id} type="button" onClick={() => goToSection(a.id)} className={actionClass}>
-        {a.label} →
+        {a.label} â†’
       </button>
     );
   };
@@ -677,6 +771,7 @@ export default function Byte() {
   const pixels = scramble ?? settled;
   const hideForForm = typingElsewhere && !open;
   const showBubble = !!bubble && form === "byte" && !open && mode !== "sleep" && !hideForForm;
+  const showGlow = (curious || hovered) && form === "byte" && !open && !hideForForm && !scramble;
   const lifted = hovered && (mode === "idle" || mode === "walk") && !reduced.current;
 
   return (
@@ -797,22 +892,24 @@ export default function Byte() {
             {showBubble && (
               <motion.div
                 key="bubble"
-                initial={{ opacity: 0, y: 6, scale: 0.8 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: 6, scale: 0.8 }}
-                transition={{ duration: 0.18 }}
-                className={`byte-bubble absolute bottom-[80px] whitespace-nowrap bg-white px-3 py-1.5 font-pixel text-xs text-[#080A0D] ${
-                  bubbleSide === "right" ? "right-4 origin-bottom-right" : "left-4 origin-bottom-left"
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 4 }}
+                transition={{ duration: 0.16 }}
+                className={`absolute bottom-[82px] whitespace-nowrap rounded-md border border-white/10 bg-surface/90 px-2.5 py-1.5 font-mono text-xs text-primary shadow-glass backdrop-blur-sm ${
+                  bubbleSide === "right" ? "right-2" : "left-2"
                 }`}
               >
-                {bubble}
-                <span
-                  aria-hidden
-                  className={`absolute -bottom-[6px] h-[6px] w-[6px] bg-white ${bubbleSide === "right" ? "right-5" : "left-5"}`}
-                />
+                <TypedPrompt key={bubble} text={bubble ?? ""} instant={reduced.current} />
               </motion.div>
             )}
           </AnimatePresence>
+
+          {/* Curious glow (until the first tap; also on hover) and decrypting glyphs. */}
+          {showGlow && <span aria-hidden className="byte-glow" style={{ animationDelay: `0s, ${glowDelay}ms` }} />}
+          {glyphs.map((g) => (
+            <DecryptGlyph key={g.id} x={g.x} y={g.y} color={g.color} />
+          ))}
 
           {mode === "sleep" && form === "byte" && (
             <span aria-hidden className="byte-zzz absolute -top-3 right-0 font-pixel text-sm text-secondary">

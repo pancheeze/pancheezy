@@ -43,24 +43,25 @@ const BODY = [
   "...AAAAAAAAAAAA...",
 ];
 
+// Chat icon: a tiny terminal window with a ">_" prompt (the cursor blinks, see globals.css).
 const ICON = [
   "..................",
   "..................",
-  "...AAAAAAAAAAAA...",
-  "..AHBBBBBBBBBBBA..",
-  ".ABBSSSSSSSSSSBBA.",
-  ".ABSXXSSSSSSSSSBA.",
-  ".ABSXSSSSSSSSSSBA.",
-  ".ABSSSSSSSSSSSSBA.",
-  ".ABSFFSSFFSSFFSBA.",
-  ".ABSFFSSFFSSFFSBA.",
-  ".ABSSSSSSSSSSSSBA.",
-  ".ABBSSSSSSSSSSBBA.",
+  "..................",
+  ".HAAAAAAAAAAAAAAA.",
   ".ABBBBBBBBBBBBBBA.",
-  "..ABBBBBBBBBBBBA..",
-  "...ABBAAAAAAAAA...",
-  "...ABA............",
-  "...AA.............",
+  ".ABKBFBGBBBBBBBBA.",
+  ".ABBBBBBBBBBBBBBA.",
+  ".AAAAAAAAAAAAAAAA.",
+  ".ASSSSSSSSSSSSSSA.",
+  ".ASGSSSSSSSSSSSSA.",
+  ".ASSGSSSSSSSSSSSA.",
+  ".ASSSGSSSSSSSSSSA.",
+  ".ASSGSSSSSSSSSSSA.",
+  ".ASGSSSFFFFSSSSSA.",
+  ".ASSSSSSSSSSSSSSA.",
+  ".ASSSSSSSSSSSSSSA.",
+  ".AAAAAAAAAAAAAAAA.",
 ];
 
 type Pt = [number, number];
@@ -131,8 +132,8 @@ export function byteFrame(face: Face, legs: Legs, look: -1 | 0 | 1): Pixel[] {
 }
 
 export const ICON_FRAME: Pixel[] = [...rowsToMap(ICON).values()].map((p) =>
-  // Tag the three dots so CSS can animate them like a typing indicator.
-  p.c === COLORS.F ? { ...p, k: p.x <= 5 ? "dot1" : p.x <= 9 ? "dot2" : "dot3" } : p
+  // Tag the "_" cursor so CSS can blink it (faster while Byte is answering).
+  p.c === COLORS.F && p.y === 13 ? { ...p, k: "cursor" } : p
 );
 
 /**

@@ -140,17 +140,53 @@ body::-webkit-scrollbar {
 }
 
 /* ---------- Byte, the wandering pixel mascot (components/byte) ---------- */
-/* Chat icon dots bounce like a typing indicator while Byte is answering. */
-.byte-typing .byte-dot1,
-.byte-typing .byte-dot2,
-.byte-typing .byte-dot3 {
-  animation: byte-dot 0.9s steps(2, jump-none) infinite;
+/* Chat icon (a pixel terminal): the "_" cursor blinks, faster while Byte is answering. */
+.byte-cursor {
+  animation: byte-blink 1.1s steps(1) infinite;
 }
-.byte-typing .byte-dot2 { animation-delay: 0.15s; }
-.byte-typing .byte-dot3 { animation-delay: 0.3s; }
-/* Pixel-style speech bubble: square, with stepped corners. */
-.byte-bubble {
-  box-shadow: 0 -3px 0 0 #E9E6DF, 0 3px 0 0 #E9E6DF, -3px 0 0 0 #E9E6DF, 3px 0 0 0 #E9E6DF;
+.byte-typing .byte-cursor {
+  animation-duration: 0.35s;
+}
+/* Terminal-style prompt above Byte ("> ask me about paul▌"). */
+.byte-caret {
+  animation: byte-blink 1s steps(1) infinite;
+}
+/* Soft glow behind Byte that cycles through the site's accent colors (amber, sage, steel blue). */
+.byte-glow {
+  position: absolute;
+  inset: -2px -10px 2px; /* a bit larger than Byte, so the glow shows around his edges */
+  border-radius: 45%;
+  filter: blur(14px);
+  pointer-events: none;
+  z-index: -1; /* behind the sprite, still inside Byte's own layer */
+  animation: byte-glow-pulse 2.6s ease-in-out infinite, byte-glow-hue 6s linear infinite;
+}
+/* Decrypting glyphs that drift up from Byte and fade. */
+.byte-glyph {
+  position: absolute;
+  pointer-events: none;
+  font-size: 11px;
+  line-height: 1;
+  animation: byte-glyph 1.8s ease-out forwards;
+}
+@keyframes byte-blink {
+  0%, 55% { opacity: 1; }
+  56%, 100% { opacity: 0; }
+}
+@keyframes byte-glow-pulse {
+  0%, 100% { opacity: 0.22; transform: scale(0.92); }
+  50%      { opacity: 0.5; transform: scale(1.06); }
+}
+@keyframes byte-glow-hue {
+  0%, 100% { background-color: #ECA35F; }
+  33%      { background-color: #7FA88B; }
+  66%      { background-color: #7AA5C4; }
+}
+@keyframes byte-glyph {
+  0%   { opacity: 0; transform: translateY(0); }
+  20%  { opacity: 0.75; }
+  70%  { opacity: 0.55; }
+  100% { opacity: 0; transform: translateY(-22px); }
 }
 .byte-btn {
   -webkit-user-select: none;
@@ -162,10 +198,6 @@ body::-webkit-scrollbar {
 }
 .byte-heart {
   animation: byte-heart 1.2s steps(8) forwards;
-}
-@keyframes byte-dot {
-  from { opacity: 1; }
-  to   { opacity: 0.25; }
 }
 @keyframes byte-zzz {
   0%   { opacity: 0; transform: translate(0, 0); }
@@ -180,7 +212,13 @@ body::-webkit-scrollbar {
 @media (prefers-reduced-motion: reduce) {
   .byte-zzz,
   .byte-heart,
-  .byte-typing rect {
+  .byte-cursor,
+  .byte-caret {
     animation: none !important;
+  }
+  .byte-glow {
+    animation: none !important;
+    opacity: 0.25;
+    background-color: #ECA35F;
   }
 }
