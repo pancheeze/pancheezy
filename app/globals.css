@@ -161,13 +161,16 @@ body::-webkit-scrollbar {
   z-index: -1; /* behind the sprite, still inside Byte's own layer */
   animation: byte-glow-pulse 2.6s ease-in-out infinite, byte-glow-hue 6s linear infinite;
 }
-/* Decrypting glyphs that drift up from Byte and fade. */
+/* Decrypting glyph particles around Byte; position and fade are set by JS physics. */
 .byte-glyph {
   position: absolute;
+  left: 0;
+  top: 0;
   pointer-events: none;
   font-size: 11px;
   line-height: 1;
-  animation: byte-glyph 1.8s ease-out forwards;
+  opacity: 0;
+  will-change: transform, opacity;
 }
 @keyframes byte-blink {
   0%, 55% { opacity: 1; }
@@ -181,12 +184,6 @@ body::-webkit-scrollbar {
   0%, 100% { background-color: #ECA35F; }
   33%      { background-color: #7FA88B; }
   66%      { background-color: #7AA5C4; }
-}
-@keyframes byte-glyph {
-  0%   { opacity: 0; transform: translateY(0); }
-  20%  { opacity: 0.75; }
-  70%  { opacity: 0.55; }
-  100% { opacity: 0; transform: translateY(-22px); }
 }
 .byte-btn {
   -webkit-user-select: none;

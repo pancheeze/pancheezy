@@ -33,6 +33,7 @@ const GLYPH_CHARS = "01#$%<>/*+=;";
 const GLOW_COLORS = ["#ECA35F", "#7FA88B", "#7AA5C4"]; // same order and 6s loop as .byte-glow in globals.css
 const GLOW_CYCLE_MS = 6000;
 const TYPE_MS = 38; // per character in the terminal prompt
+const ASK_EVERY_MS = 15_000; // parked Byte repeats "ask me about ..." at most this often
 const CHAT_KEY = "byte-chat-v1"; // sessionStorage: the chat survives closing Byte and changing pages
 const MAX_SAVED = 40;
 
@@ -71,23 +72,26 @@ function saveChat(messages: Msg[]) {
 const shouldPark = () => window.innerWidth < PARK_BELOW || window.matchMedia("(pointer: coarse)").matches;
 const randomGlyph = () => GLYPH_CHARS[Math.floor(Math.random() * GLYPH_CHARS.length)];
 
-/** A glyph that scrambles for a moment (like the loading screen), then drifts up and fades (CSS). */
-function DecryptGlyph({ x, y, color }: { x: number; y: number; color: string }) {
-  const [ch, setCh] = useState(randomGlyph);
-  useEffect(() => {
-    let n = 0;
-    const id = setInterval(() => {
-      setCh(randomGlyph());
-      if (++n >= 8) clearInterval(id);
-    }, 80);
-    return () => clearInterval(id);
-  }, []);
-  return (
-    <span aria-hidden className="byte-glyph font-mono" style={{ left: x, top: y, color }}>
-      {ch}
-    </span>
-  );
-}
+// Glyph particles: released into the screen at Byte's position (not attached to him), so when he
+// walks or is thrown they're left behind and stream out as a trail. Simulated in the animation loop
+// and drawn straight to the DOM, so they don't re-render React.
+type Spark = {
+  el: HTMLSpanElement;
+  x: number; // viewport px (top-left)
+  y: number;
+  vx: number; // px/s
+  vy: number;
+  age: number; // s
+  life: number;
+  seed: number;
+  lastScramble: number;
+};
+const SPARK_LIFE = [1.6, 2.2]; // s
+const SPARK_SCRAMBLE_S = 0.6; // characters "decrypt" for this long, then settle
+const SPARK_BUOYANCY = -14; // px/s^2, they float up a little faster over time
+const SPARK_DRAG = 1.8; // horizontal slow-down per second
+const SPARK_MAX = 12;
+const sparkEvery = (m: Mode, moving: boolean) => (m === "air" || m === "held" ? 0.09 : moving ? 0.28 : 0.65); // s
 
 /** Types the text out like a terminal, with a blinking block cursor. Width is reserved so it doesn't jitter. */
 function TypedPrompt({ text, instant }: { text: string; instant: boolean }) {
@@ -177,7 +181,6 @@ export default function Byte() {
   const [input, setInput] = useState("");
   const [thinking, setThinking] = useState(false);
   const [typingElsewhere, setTypingElsewhere] = useState(false);
-  const [glyphs, setGlyphs] = useState<{ id: number; x: number; y: number; color: string }[]>([]);
   // Starts the CSS color loop at the same point as the JS clock, so glyphs match the glow's color.
   const [glowDelay] = useState(() => (typeof performance === "undefined" ? 0 : -(performance.now() % GLOW_CYCLE_MS)));
 
@@ -189,6 +192,10 @@ export default function Byte() {
   const flight = useRef({ impact: 0 });
   const reduced = useRef(false);
   const parked = useRef(false);
+  const lastAsk = useRef(0);
+  const glyphLayer = useRef<HTMLDivElement>(null);
+  const sparks = useRef<Spark[]>([]);
+  const glyphsOnRef = useRef(false);
   const dialogRef = useRef<HTMLDivElement>(null);
   const shakenRef = useRef(false);
   const openRef = useRef(false);
@@ -260,6 +267,11 @@ export default function Byte() {
           schedule(rand(8000, 12000));
         } else {
           setMode("idle");
+          // Remind visitors every ~15-20s, even after they've chatted with him.
+          if (Date.now() - lastAsk.current > ASK_EVERY_MS) {
+            lastAsk.current = Date.now();
+            say(ASK_ME, 4500);
+          }
           schedule(rand(4000, 7000));
         }
         return;
@@ -324,7 +336,73 @@ export default function Byte() {
     let raf = 0;
     let last = performance.now();
     let lastStep = -1;
+    let prevX = pos.current.x;
+    let prevY = pos.current.y;
+    let sinceSpark = 0;
     if (elRef.current) elRef.current.style.transform = `translate3d(${pos.current.x}px, 0, 0)`;
+
+    const spawnSpark = (now: number, vx: number, vy: number, moving: boolean) => {
+      const layer = glyphLayer.current;
+      if (!layer) return;
+      const p = pos.current;
+      const top = window.innerHeight - BOTTOM - H - p.y;
+      let x: number;
+      let y: number;
+      if (moving) {
+        // Released from the trailing side, so the stream lines up behind him.
+        x = vx > 0 ? p.x + rand(-6, 12) : vx < 0 ? p.x + rand(W - 12, W + 6) : p.x + rand(0, W);
+        y = top + rand(6, H - 20);
+      } else {
+        const side = Math.random();
+        x = side < 0.35 ? p.x + rand(-14, 4) : side < 0.7 ? p.x + rand(W - 12, W + 4) : p.x + rand(12, W - 22);
+        y = side < 0.7 ? top + rand(12, 46) : top + rand(-6, 6);
+      }
+      const phase = (now % GLOW_CYCLE_MS) / GLOW_CYCLE_MS;
+      const el = document.createElement("span");
+      el.className = "byte-glyph font-mono";
+      el.textContent = randomGlyph();
+      el.style.color = GLOW_COLORS[Math.round(phase * GLOW_COLORS.length) % GLOW_COLORS.length];
+      layer.appendChild(el);
+      sparks.current.push({
+        el,
+        x,
+        y,
+        // A little of Byte's motion, reversed, so the trail stretches out behind him.
+        vx: rand(-12, 12) - Math.max(-260, Math.min(260, vx)) * 0.18,
+        vy: -rand(16, 34) + Math.max(-600, Math.min(600, vy)) * 0.05,
+        age: 0,
+        life: rand(SPARK_LIFE[0], SPARK_LIFE[1]),
+        seed: Math.random() * 10,
+        lastScramble: now,
+      });
+      if (sparks.current.length > SPARK_MAX) sparks.current.shift()?.el.remove();
+    };
+
+    const stepSparks = (now: number, dt: number) => {
+      const list = sparks.current;
+      for (let i = list.length - 1; i >= 0; i--) {
+        const s = list[i];
+        s.age += dt;
+        if (s.age >= s.life) {
+          s.el.remove();
+          list.splice(i, 1);
+          continue;
+        }
+        s.vx *= Math.exp(-SPARK_DRAG * dt);
+        s.vy += SPARK_BUOYANCY * dt;
+        s.x += (s.vx + Math.sin(s.age * 4 + s.seed) * 7) * dt; // gentle sway
+        s.y += s.vy * dt;
+        if (s.age < SPARK_SCRAMBLE_S && now - s.lastScramble > 80) {
+          s.el.textContent = randomGlyph();
+          s.lastScramble = now;
+        }
+        const k = s.age / s.life;
+        const opacity = k < 0.15 ? (k / 0.15) * 0.75 : k > 0.6 ? ((1 - k) / 0.4) * 0.75 : 0.75;
+        s.el.style.opacity = opacity.toFixed(3);
+        s.el.style.transform = `translate3d(${s.x.toFixed(1)}px, ${s.y.toFixed(1)}px, 0) rotate(${(s.vx * 0.25).toFixed(1)}deg)`;
+      }
+    };
+
     const tick = (now: number) => {
       const dt = Math.min(0.04, (now - last) / 1000);
       last = now;
@@ -380,10 +458,29 @@ export default function Byte() {
       }
 
       if (elRef.current) elRef.current.style.transform = `translate3d(${p.x}px, ${-p.y}px, 0)`;
+
+      // Glyph particles
+      const vx = dt > 0 ? (p.x - prevX) / dt : 0;
+      const vy = dt > 0 ? (p.y - prevY) / dt : 0;
+      prevX = p.x;
+      prevY = p.y;
+      const moving = Math.abs(vx) > 5 || Math.abs(vy) > 5;
+      sinceSpark += dt;
+      if (glyphsOnRef.current && !reduced.current && sinceSpark >= sparkEvery(m, moving)) {
+        sinceSpark = 0;
+        spawnSpark(now, vx, vy, moving);
+      }
+      stepSparks(now, dt);
+
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
+    const list = sparks.current;
+    return () => {
+      cancelAnimationFrame(raf);
+      list.forEach((s) => s.el.remove());
+      list.length = 0;
+    };
   }, [ready, land]);
 
   // ----- Start -----
@@ -478,22 +575,10 @@ export default function Byte() {
     return () => clearInterval(id);
   }, [mode]);
 
-  // Decrypting glyphs drift off Byte while he's waiting to be found (2-3 at a time, in the glow's color).
+  // Glyph particles are spawned by the animation loop while this is true.
   const glyphsOn = !open && form === "byte" && !typingElsewhere;
   useEffect(() => {
-    if (!glyphsOn || reduced.current) return;
-    let n = 0;
-    const id = setInterval(() => {
-      const key = Date.now() * 10 + (n++ % 10);
-      const side = Math.random();
-      const x = side < 0.35 ? rand(-14, 4) : side < 0.7 ? rand(W - 12, W + 4) : rand(12, W - 22);
-      const y = side < 0.7 ? rand(12, 46) : rand(-6, 6);
-      const phase = (performance.now() % GLOW_CYCLE_MS) / GLOW_CYCLE_MS;
-      const color = GLOW_COLORS[Math.round(phase * GLOW_COLORS.length) % GLOW_COLORS.length];
-      setGlyphs((g) => [...g.slice(-2), { id: key, x, y, color }]);
-      setTimeout(() => setGlyphs((g) => g.filter((x) => x.id !== key)), 1800);
-    }, 650);
-    return () => clearInterval(id);
+    glyphsOnRef.current = glyphsOn;
   }, [glyphsOn]);
 
   // ----- Chat open / close (with the "decrypt" transition) -----
@@ -855,6 +940,13 @@ export default function Byte() {
         )}
       </AnimatePresence>
 
+      {/* Glyph particles (screen-space, so they trail behind him). Filled by the animation loop. */}
+      <div
+        ref={glyphLayer}
+        aria-hidden
+        className={`pointer-events-none fixed inset-0 z-[79] overflow-hidden transition-opacity duration-200 ${hideForForm ? "opacity-0" : ""}`}
+      />
+
       {/* Byte himself. Position is set every frame by the animation loop. */}
       <div
         ref={elRef}
@@ -882,11 +974,8 @@ export default function Byte() {
             )}
           </AnimatePresence>
 
-          {/* Soft glow (always on while he's Byte) and decrypting glyphs. */}
+          {/* Soft glow, always on while he's Byte. */}
           {showGlow && <span aria-hidden className="byte-glow" style={{ animationDelay: `0s, ${glowDelay}ms` }} />}
-          {glyphs.map((g) => (
-            <DecryptGlyph key={g.id} x={g.x} y={g.y} color={g.color} />
-          ))}
 
           {mode === "sleep" && form === "byte" && (
             <span aria-hidden className="byte-zzz absolute -top-3 right-0 font-pixel text-sm text-secondary">
