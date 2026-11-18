@@ -49,6 +49,15 @@ export const profile = {
     ["open_to", "internships & collaborations"],
     ["honors", "President's Lister (since 1st year)"],
   ] as [string, string][],
+  // Extra facts for Byte (the chatbot). Fill in an answer to teach him; empty answers are skipped,
+  // so he says he doesn't know instead of guessing.
+  faq: [
+    ["When does he graduate?", "He expects to finish his BS Information Technology in 2027."],
+    ["When is he available for OJT / internship, and for how many hours?", ""],
+    ["Does he prefer onsite, remote or hybrid work? Where can he work onsite?", ""],
+    ["What roles is he looking for?", ""],
+    ["What languages does he speak?", ""],
+  ] as [string, string][],
   interests: [
     "Full-Stack Web Development",
     "Mobile Apps",

@@ -14,8 +14,9 @@ export const runtime = "nodejs";
 const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
 const DEFAULT_MODEL = "openai/gpt-oss-120b";
 const MAX_MESSAGE_CHARS = 500;
-const MAX_HISTORY = 8;
+const MAX_HISTORY = 6;
 const TIMEOUT_MS = 12_000;
+const MAX_RETRY_WAIT_MS = 6_000;
 
 // Best-effort rate limit per IP, so one visitor can't burn the free daily quota.
 // Serverless instances don't share memory, so this only slows down bursts.
@@ -49,31 +50,55 @@ function parseMessages(body: unknown): ChatMessage[] | null {
   return messages;
 }
 
+// The chat shows plain text, so remove markdown the model sometimes adds anyway.
+function stripMarkdown(text: string): string {
+  return text
+    .replace(/\*\*(.+?)\*\*/g, "$1")
+    .replace(/__(.+?)__/g, "$1")
+    .replace(/`([^`\n]+)`/g, "$1")
+    .replace(/^#{1,6}\s+/gm, "")
+    .replace(/^(\s*)[*•]\s+/gm, "$1- ")
+    .replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g, "$1 ($2)");
+}
+
 async function askGroq(messages: ChatMessage[], apiKey: string): Promise<string | null> {
   const model = process.env.GROQ_MODEL || DEFAULT_MODEL;
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
+  const started = Date.now();
+  const body = JSON.stringify({
+    model,
+    messages: [{ role: "system", content: buildSystemPrompt() }, ...messages],
+    temperature: 0.6,
+    // Kept small: the free plan counts this budget against the per-minute token limit.
+    max_completion_tokens: 450,
+    // gpt-oss models think before answering; keep it quick for a chat bubble.
+    ...(model.startsWith("openai/gpt-oss") ? { reasoning_effort: "low" } : {}),
+  });
   try {
-    const res = await fetch(GROQ_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
-      body: JSON.stringify({
-        model,
-        messages: [{ role: "system", content: buildSystemPrompt() }, ...messages],
-        temperature: 0.6,
-        max_completion_tokens: 600,
-        // gpt-oss models think before answering; keep it quick for a chat bubble.
-        ...(model.startsWith("openai/gpt-oss") ? { reasoning_effort: "low" } : {}),
-      }),
-      signal: controller.signal,
-    });
+    let res: Response;
+    for (let attempt = 1; ; attempt++) {
+      res = await fetch(GROQ_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
+        body,
+        signal: controller.signal,
+      });
+      // Free-plan per-minute limit: if Groq says it frees up within a few seconds, wait once and retry
+      // instead of dropping straight to the scripted answers.
+      const waitS = Number(res.headers.get("retry-after"));
+      const waitMs = Number.isFinite(waitS) && waitS > 0 ? waitS * 1000 : 0;
+      if (res.status !== 429 || attempt > 1 || !waitMs || waitMs > MAX_RETRY_WAIT_MS || Date.now() - started + waitMs > TIMEOUT_MS - 4000) break;
+      await res.body?.cancel();
+      await new Promise((r) => setTimeout(r, waitMs));
+    }
     if (!res.ok) {
       console.error(`Byte: Groq returned ${res.status}`, (await res.text()).slice(0, 300));
       return null;
     }
     const data = await res.json();
     const reply = data?.choices?.[0]?.message?.content;
-    return typeof reply === "string" && reply.trim() ? reply.trim() : null;
+    return typeof reply === "string" && reply.trim() ? stripMarkdown(reply).trim() : null;
   } catch (err) {
     console.error("Byte: Groq request failed", err);
     return null;

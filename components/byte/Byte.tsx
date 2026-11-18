@@ -776,6 +776,9 @@ export default function Byte() {
                 <Send size={16} />
               </button>
             </form>
+            <p className="-mt-1 px-4 pb-2.5 text-center text-[11px] text-text-muted">
+              Byte is an AI helper and can make mistakes. Check details with {firstName}.
+            </p>
           </motion.div>
         )}
       </AnimatePresence>
