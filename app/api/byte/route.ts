@@ -6,7 +6,7 @@ import { buildSystemPrompt, scriptedAnswer } from "@/lib/byte";
 //   - the free daily limit is used up, or
 //   - Groq is slow or down.
 // Environment variables (set in Vercel, never in the code):
-//   GROQ_API_KEY  free key from https://console.groq.com/keys
+//   GROQ_API_KEY  free key from https://console.groq.com/keys (GroqApi also works)
 //   GROQ_MODEL    optional, defaults to openai/gpt-oss-120b
 
 export const runtime = "nodejs";
@@ -97,7 +97,8 @@ export async function POST(request: Request) {
   const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
 
   // Over the per-visitor limit: still answer, just without spending AI quota.
-  const apiKey = process.env.GROQ_API_KEY;
+  // "GroqApi" is the name used in this project's Vercel settings; GROQ_API_KEY is the standard one.
+  const apiKey = process.env.GROQ_API_KEY || process.env.GroqApi;
   if (apiKey && !rateLimited(ip)) {
     const reply = await askGroq(messages, apiKey);
     if (reply) return Response.json({ reply, source: "ai" });
