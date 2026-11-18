@@ -180,6 +180,16 @@ body::-webkit-scrollbar {
   0%, 100% { opacity: 0.22; transform: scale(0.92); }
   50%      { opacity: 0.5; transform: scale(1.06); }
 }
+/* Phones: a touch softer (small screens make the glow feel stronger). */
+@media (pointer: coarse), (max-width: 767px) {
+  .byte-glow {
+    animation-name: byte-glow-pulse-soft, byte-glow-hue;
+  }
+}
+@keyframes byte-glow-pulse-soft {
+  0%, 100% { opacity: 0.17; transform: scale(0.92); }
+  50%      { opacity: 0.39; transform: scale(1.04); }
+}
 @keyframes byte-glow-hue {
   0%, 100% { background-color: #ECA35F; }
   33%      { background-color: #7FA88B; }

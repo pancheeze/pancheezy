@@ -36,6 +36,7 @@ export default function Contact() {
       if (!res.ok) throw new Error(result.error || "Your message couldn't be sent.");
       form.reset();
       setStatus("success");
+      window.dispatchEvent(new Event("byte:celebrate")); // Byte (components/byte) cheers
       setTimeout(() => setStatus("idle"), 4000);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Your message couldn't be sent.");

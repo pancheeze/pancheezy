@@ -7,7 +7,7 @@ import PixelSprite from "./PixelSprite";
 import { byteFrame, decryptFrame, Face, GRID_H, GRID_W, ICON_FRAME, Legs, Pixel } from "./sprites";
 import Link from "next/link";
 import { actionsFor, ByteAction, suggestedQuestions } from "@/lib/byte";
-import { profile } from "@/lib/data";
+import { profile, projects } from "@/lib/data";
 
 // Byte: a pixel-art terminal robot that wanders along the bottom of the screen.
 //   tap        -> he "decrypts" into a pixel chat icon (like the loading screen), and the chat opens
@@ -91,6 +91,77 @@ const SPARK_SCRAMBLE_S = 0.6; // characters "decrypt" for this long, then settle
 const SPARK_BUOYANCY = -14; // px/s^2, they float up a little faster over time
 const SPARK_DRAG = 1.8; // horizontal slow-down per second
 const SPARK_MAX = 12;
+// Squash & stretch: two springs (horizontal squish from walls, vertical from floor/ceiling).
+const SQUASH_K = 420; // stiffness
+const SQUASH_C = 16; // damping (low enough for a jelly wobble)
+const SQUASH_MAX = 0.35;
+// Scroll wobble: a rotation spring kicked by changes in scroll speed.
+const LEAN_K = 260;
+const LEAN_C = 9;
+const LEAN_MAX = 12; // deg
+// Parachute: gentle drops from high up float down instead of falling.
+const CHUTE_MIN_HEIGHT = 140; // px above the floor
+const CHUTE_FALL = 115; // px/s terminal speed
+const CHUTE_SWAY = 46; // px/s side-to-side
+const BURST_GLYPHS = 14; // contact-form celebration
+
+// Section tips: typed once per visit when the section scrolls into view.
+const capstone = projects.find((p) => /capstone/i.test(p.category))?.name;
+const SECTION_TIPS: [string, string][] = [
+  ["projects", capstone ? `psst, ${capstone} is his capstone` : "ask me about any project"],
+  ["skills", "ask me what he's best at"],
+  ["contact", `say hi to ${profile.name.split(" ")[0].toLowerCase()}!`],
+];
+const TIPS_KEY = "byte-tips";
+
+/** Pixel umbrella-parachute in the site's colors, with strings down to Byte's shoulders. 24 x 14 grid at 4x. */
+function PixelChute() {
+  const BANDS = ["#ECA35F", "#7FA88B", "#7AA5C4"];
+  const rows: [number, number, number][] = [
+    [0, 7, 16],
+    [1, 4, 19],
+    [2, 2, 21],
+    [3, 1, 22],
+    [4, 0, 23],
+    [5, 0, 23],
+  ];
+  const rects: { x: number; y: number; c: string; o?: number }[] = [];
+  for (const [y, a, b] of rows)
+    for (let x = a; x <= b; x++) rects.push({ x, y, c: BANDS[Math.floor(x / 8)], o: y <= 1 ? 0.85 : 1 });
+  // Scalloped hem.
+  for (let x = 0; x < 24; x++) if (x % 6 !== 5) rects.push({ x, y: 6, c: BANDS[Math.floor(x / 8)] });
+  // Strings: canopy edges/centre down to Byte's shoulders (his body starts 3 columns in).
+  const line = (x0: number, y0: number, x1: number, y1: number) => {
+    const n = Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0));
+    for (let i = 0; i <= n; i++)
+      rects.push({ x: Math.round(x0 + ((x1 - x0) * i) / n), y: Math.round(y0 + ((y1 - y0) * i) / n), c: "#98A2AB", o: 0.8 });
+  };
+  line(1, 7, 6, 13);
+  line(22, 7, 17, 13);
+  return (
+    <svg viewBox="0 0 24 14" width={96} height={56} shapeRendering="crispEdges" aria-hidden className="block">
+      {rects.map((r, i) => (
+        <rect key={i} x={r.x} y={r.y} width="1" height="1" fill={r.c} opacity={r.o ?? 1} />
+      ))}
+    </svg>
+  );
+}
+
+type SquashState = {
+  x: { d: number; v: number; hold: number };
+  y: { d: number; v: number; hold: number };
+  ox: string;
+  oy: string;
+};
+/** Splat: squish along one axis, anchored on the side that was hit. */
+function kickSquash(s: SquashState, axis: "x" | "y", amount: number, side: string) {
+  const a = s[axis];
+  a.d = Math.max(a.d, Math.min(SQUASH_MAX, amount));
+  a.v = 0;
+  if (axis === "x") s.ox = side;
+  else s.oy = side;
+}
+
 const sparkEvery = (m: Mode, moving: boolean) => (m === "air" || m === "held" ? 0.09 : moving ? 0.28 : 0.65); // s
 
 /** Types the text out like a terminal, with a blinking block cursor. Width is reserved so it doesn't jitter. */
@@ -196,6 +267,13 @@ export default function Byte() {
   const glyphLayer = useRef<HTMLDivElement>(null);
   const sparks = useRef<Spark[]>([]);
   const glyphsOnRef = useRef(false);
+  const squashEl = useRef<HTMLSpanElement>(null);
+  const leanEl = useRef<HTMLSpanElement>(null);
+  // Squash springs: d = amount (0..SQUASH_MAX), v = velocity, hold = target while pushed against an edge.
+  const squash = useRef<SquashState>({ x: { d: 0, v: 0, hold: 0 }, y: { d: 0, v: 0, hold: 0 }, ox: "center", oy: "bottom" });
+  const chuteRef = useRef(false);
+  const burst = useRef(0);
+  const [chute, setChute] = useState(false);
   const dialogRef = useRef<HTMLDivElement>(null);
   const shakenRef = useRef(false);
   const openRef = useRef(false);
@@ -312,6 +390,17 @@ export default function Byte() {
     p.y = 0;
     p.vx = 0;
     p.vy = 0;
+    if (chuteRef.current) {
+      // Soft parachute landing: fold the canopy away.
+      chuteRef.current = false;
+      setChute(false);
+      if (elRef.current) elRef.current.style.transformOrigin = "";
+      flight.current.impact = 0;
+      setMode("idle");
+      say(pick(["safe!", "smooth landing", "touchdown!"]), 1800);
+      settle(1800);
+      return;
+    }
     if (shakenRef.current || flight.current.impact > 1500) {
       setMode("dizzy");
       say(pick(["@_@", "the room is spinning", "ugh... dizzy"]), 2200);
@@ -339,16 +428,23 @@ export default function Byte() {
     let prevX = pos.current.x;
     let prevY = pos.current.y;
     let sinceSpark = 0;
+    let prevScroll = window.scrollY;
+    let prevSv = 0;
+    const lean = { a: 0, v: 0 }; // degrees, deg/s
     if (elRef.current) elRef.current.style.transform = `translate3d(${pos.current.x}px, 0, 0)`;
 
-    const spawnSpark = (now: number, vx: number, vy: number, moving: boolean) => {
+    const spawnSpark = (now: number, vx: number, vy: number, moving: boolean, fling?: { vx: number; vy: number }) => {
       const layer = glyphLayer.current;
       if (!layer) return;
       const p = pos.current;
       const top = window.innerHeight - BOTTOM - H - p.y;
       let x: number;
       let y: number;
-      if (moving) {
+      if (fling) {
+        // Celebration burst: from the top of his head.
+        x = p.x + rand(18, W - 22);
+        y = top + rand(0, 14);
+      } else if (moving) {
         // Released from the trailing side, so the stream lines up behind him.
         x = vx > 0 ? p.x + rand(-6, 12) : vx < 0 ? p.x + rand(W - 12, W + 6) : p.x + rand(0, W);
         y = top + rand(6, H - 20);
@@ -368,8 +464,8 @@ export default function Byte() {
         x,
         y,
         // A little of Byte's motion, reversed, so the trail stretches out behind him.
-        vx: rand(-12, 12) - Math.max(-260, Math.min(260, vx)) * 0.18,
-        vy: -rand(16, 34) + Math.max(-600, Math.min(600, vy)) * 0.05,
+        vx: fling ? fling.vx : rand(-12, 12) - Math.max(-260, Math.min(260, vx)) * 0.18,
+        vy: fling ? fling.vy : -rand(16, 34) + Math.max(-600, Math.min(600, vy)) * 0.05,
         age: 0,
         life: rand(SPARK_LIFE[0], SPARK_LIFE[1]),
         seed: Math.random() * 10,
@@ -430,23 +526,34 @@ export default function Byte() {
           }
         }
       } else if (m === "air") {
-        p.vy -= GRAVITY * dt;
+        const sq = squash.current;
+        if (chuteRef.current) {
+          // Parachute: slow fall, swaying like a leaf.
+          p.vy = Math.max(p.vy - GRAVITY * dt, -CHUTE_FALL);
+          p.vx = Math.sin(now / 1000 * 2.2) * CHUTE_SWAY;
+        } else {
+          p.vy -= GRAVITY * dt;
+        }
         p.x += p.vx * dt;
         p.y += p.vy * dt;
         if (p.x < EDGE) {
           p.x = EDGE;
+          if (!chuteRef.current) kickSquash(sq, "x", (Math.abs(p.vx) / 2600) * 0.7, "left");
           p.vx = Math.abs(p.vx) * 0.55;
         } else if (p.x > maxX()) {
           p.x = maxX();
+          if (!chuteRef.current) kickSquash(sq, "x", (Math.abs(p.vx) / 2600) * 0.7, "right");
           p.vx = -Math.abs(p.vx) * 0.55;
         }
         if (p.y > maxY()) {
           p.y = maxY();
+          kickSquash(sq, "y", (Math.abs(p.vy) / 2600) * 0.6, "top");
           p.vy = -Math.abs(p.vy) * 0.4;
         }
         if (p.y <= 0) {
           p.y = 0;
           flight.current.impact = Math.max(flight.current.impact, -p.vy);
+          kickSquash(sq, "y", chuteRef.current ? 0.08 : (-p.vy / 2600) * 0.6, "bottom");
           if (p.vy < -420) {
             p.vy = -p.vy * 0.38;
             p.vx *= 0.7;
@@ -457,7 +564,41 @@ export default function Byte() {
         if (Math.abs(p.vx) > 40) setFacing(p.vx > 0 ? 1 : -1);
       }
 
-      if (elRef.current) elRef.current.style.transform = `translate3d(${p.x}px, ${-p.y}px, 0)`;
+      // Parachute swing: rotate around the canopy, in time with the sway.
+      const swing = chuteRef.current && m === "air" ? Math.sin(now / 1000 * 2.2 - 0.6) * 7 : 0;
+      if (elRef.current)
+        elRef.current.style.transform = `translate3d(${p.x}px, ${-p.y}px, 0)${swing ? ` rotate(${swing.toFixed(2)}deg)` : ""}`;
+
+      // Squash & stretch springs (pushed against an edge = hold; otherwise wobble back to normal).
+      const sq = squash.current;
+      for (const a of [sq.x, sq.y]) {
+        a.v += (-SQUASH_K * (a.d - a.hold) - SQUASH_C * a.v) * dt;
+        a.d = Math.max(-0.15, Math.min(SQUASH_MAX, a.d + a.v * dt));
+      }
+      // Scroll wobble: sudden changes in scroll speed kick a rotation spring; fast scrolling = crouch (grip).
+      const sy = window.scrollY;
+      const sv = dt > 0 ? (sy - prevScroll) / dt : 0;
+      prevScroll = sy;
+      const grounded = m === "idle" || m === "walk" || m === "sleep" || m === "pet" || m === "dizzy";
+      if (grounded && !reduced.current) {
+        lean.v += Math.max(-140, Math.min(140, (sv - prevSv) * 0.04));
+        sq.y.hold = Math.min(0.12, Math.abs(sv) / 9000);
+        if (sq.y.hold > 0.01) sq.oy = "bottom";
+      } else if (!press.current) {
+        sq.y.hold = 0;
+      }
+      prevSv = sv;
+      lean.v += (-LEAN_K * lean.a - LEAN_C * lean.v) * dt;
+      lean.a = Math.max(-LEAN_MAX, Math.min(LEAN_MAX, lean.a + lean.v * dt));
+
+      const sx = 1 - sq.x.d + sq.y.d * 0.6;
+      const syScale = 1 - sq.y.d + sq.x.d * 0.6;
+      if (squashEl.current) {
+        const idle = Math.abs(sx - 1) < 0.002 && Math.abs(syScale - 1) < 0.002;
+        squashEl.current.style.transformOrigin = `${sq.ox} ${sq.oy}`;
+        squashEl.current.style.transform = idle ? "" : `scale(${sx.toFixed(3)}, ${syScale.toFixed(3)})`;
+      }
+      if (leanEl.current) leanEl.current.style.transform = Math.abs(lean.a) < 0.05 ? "" : `rotate(${lean.a.toFixed(2)}deg)`;
 
       // Glyph particles
       const vx = dt > 0 ? (p.x - prevX) / dt : 0;
@@ -469,6 +610,16 @@ export default function Byte() {
       if (glyphsOnRef.current && !reduced.current && sinceSpark >= sparkEvery(m, moving)) {
         sinceSpark = 0;
         spawnSpark(now, vx, vy, moving);
+      }
+      if (burst.current > 0) {
+        const n = burst.current;
+        burst.current = 0;
+        if (!reduced.current)
+          for (let i = 0; i < n; i++) {
+            const angle = (-Math.PI / 2) + rand(-1.1, 1.1); // fan upwards
+            const speed = rand(90, 190);
+            spawnSpark(now, 0, 0, false, { vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed });
+          }
       }
       stepSparks(now, dt);
 
@@ -531,6 +682,66 @@ export default function Byte() {
       document.removeEventListener("focusout", onFocusOut);
     };
   }, []);
+
+  // Section tips: a one-time hint (per visit) when Projects, Skills or Contact scrolls into view.
+  useEffect(() => {
+    if (!ready) return;
+    let seen: string[] = [];
+    try {
+      seen = JSON.parse(sessionStorage.getItem(TIPS_KEY) ?? "[]");
+    } catch {}
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          const id = entry.target.id;
+          const tip = SECTION_TIPS.find(([s]) => s === id)?.[1];
+          if (!entry.isIntersecting || !tip || seen.includes(id) || openRef.current) continue;
+          seen.push(id);
+          try {
+            sessionStorage.setItem(TIPS_KEY, JSON.stringify(seen));
+          } catch {}
+          timers.push(
+            setTimeout(() => {
+              if (openRef.current) return;
+              if (modeRef.current === "sleep") setMode("idle");
+              lastAsk.current = Date.now(); // don't stack "ask me about ..." right after a tip
+              say(tip, 5000);
+            }, 600)
+          );
+        }
+      },
+      { threshold: 0.35 }
+    );
+    SECTION_TIPS.forEach(([id]) => {
+      const el = document.getElementById(id);
+      if (el) observer.observe(el);
+    });
+    return () => {
+      observer.disconnect();
+      timers.forEach(clearTimeout);
+    };
+  }, [ready, say, setMode]);
+
+  // Contact form sent: hop, burst of glyphs, and a cheer.
+  useEffect(() => {
+    const onCelebrate = () => {
+      say("message delivered!", 3500);
+      if (reduced.current || openRef.current) return;
+      burst.current = BURST_GLYPHS;
+      const m = modeRef.current;
+      if (m === "idle" || m === "walk" || m === "sleep") {
+        clearTimeout(wanderTimer.current);
+        onArrive.current = null;
+        pos.current.vx = 0;
+        pos.current.vy = 640;
+        flight.current.impact = 0;
+        setMode("air");
+      }
+    };
+    window.addEventListener("byte:celebrate", onCelebrate);
+    return () => window.removeEventListener("byte:celebrate", onCelebrate);
+  }, [say, setMode]);
 
   // Remember the conversation for this visit.
   useEffect(() => saveChat(messages), [messages]);
@@ -663,6 +874,12 @@ export default function Byte() {
       wasSleeping: modeRef.current === "sleep",
     };
     e.currentTarget.setPointerCapture(e.pointerId);
+    if (chuteRef.current) {
+      // Grabbed mid-air: the parachute folds away.
+      chuteRef.current = false;
+      setChute(false);
+      if (elRef.current) elRef.current.style.transformOrigin = "";
+    }
     if (openRef.current) return; // the chat icon only taps
     press.current.petTimer = setTimeout(() => {
       if (!press.current || press.current.dragging) return;
@@ -691,8 +908,18 @@ export default function Byte() {
     }
 
     const p = pos.current;
-    p.x = Math.max(EDGE, Math.min(maxX(), e.clientX - pr.offX));
-    p.y = Math.max(0, Math.min(maxY(), window.innerHeight - BOTTOM - H - (e.clientY - pr.offY)));
+    const rawX = e.clientX - pr.offX;
+    const rawY = window.innerHeight - BOTTOM - H - (e.clientY - pr.offY);
+    p.x = Math.max(EDGE, Math.min(maxX(), rawX));
+    p.y = Math.max(0, Math.min(maxY(), rawY));
+    // Pushing him into a screen edge squishes him against it (the further, the flatter).
+    const sq = squash.current;
+    const overX = rawX < EDGE ? EDGE - rawX : rawX > maxX() ? rawX - maxX() : 0;
+    const overY = rawY < 0 ? -rawY : rawY > maxY() ? rawY - maxY() : 0;
+    sq.x.hold = Math.min(0.3, overX / 220);
+    sq.y.hold = Math.min(0.3, overY / 220);
+    if (overX) sq.ox = rawX < EDGE ? "left" : "right";
+    if (overY) sq.oy = rawY < 0 ? "bottom" : "top";
 
     const now = performance.now();
     const prev = pr.samples[pr.samples.length - 1];
@@ -721,6 +948,8 @@ export default function Byte() {
     if (!pr || pr.id !== e.pointerId) return;
     press.current = null;
     clearTimeout(pr.petTimer);
+    squash.current.x.hold = 0; // let go of the wall: spring back with a wobble
+    squash.current.y.hold = 0;
 
     if (pr.dragging) {
       // Release: throw with the finger's recent velocity.
@@ -738,7 +967,14 @@ export default function Byte() {
         return;
       }
       if (Math.hypot(p.vx, p.vy) > 900) say(pick(["wheee!", "I can fly!", "yeet!"]), 1400);
-      else if (p.y > 140) say(pick(["uh oh", "not again!", "aaah!"]), 1200);
+      else if (p.y > CHUTE_MIN_HEIGHT && !cancelled) {
+        // A gentle drop from up high: pop the parachute.
+        chuteRef.current = true;
+        setChute(true);
+        p.vy = Math.min(p.vy, 0);
+        if (elRef.current) elRef.current.style.transformOrigin = `${W / 2}px -44px`;
+        say(pick(["wheee~", "parachute deployed!", "gently now~"]), 2200);
+      }
       setMode("air");
       return;
     }
@@ -823,8 +1059,8 @@ export default function Byte() {
     legs = "dangle";
   }
   if (mode === "air") {
-    face = shaken ? "dizzy" : "surprised";
-    legs = "tuck";
+    face = shaken ? "dizzy" : chute ? "happy" : "surprised";
+    legs = chute ? "dangle" : "tuck";
   }
   if (mode === "dizzy") face = "dizzy";
   if (mode === "pet") face = "love";
@@ -965,11 +1201,29 @@ export default function Byte() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 4 }}
                 transition={{ duration: 0.16 }}
-                className={`absolute bottom-[82px] whitespace-nowrap rounded-md border border-white/10 bg-surface/90 px-2.5 py-1.5 font-mono text-xs text-primary shadow-glass backdrop-blur-sm ${
+                className={`absolute ${chute ? "bottom-[126px]" : "bottom-[82px]"} whitespace-nowrap rounded-md border border-white/10 bg-surface/90 px-2.5 py-1.5 font-mono text-xs text-primary shadow-glass backdrop-blur-sm ${
                   bubbleSide === "right" ? "right-2" : "left-2"
                 }`}
               >
                 <TypedPrompt key={bubble} text={bubble ?? ""} instant={reduced.current} />
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Parachute (gentle drops from up high). */}
+          <AnimatePresence>
+            {chute && form === "byte" && (
+              <motion.div
+                key="chute"
+                aria-hidden
+                className="pointer-events-none absolute -left-3"
+                style={{ bottom: H - 12, transformOrigin: "50% 100%" }}
+                initial={{ scaleX: 0.2, scaleY: 0.1, opacity: 0 }}
+                animate={{ scaleX: [0.2, 1.12, 1], scaleY: [0.1, 1.08, 1], opacity: 1 }}
+                exit={{ opacity: [1, 0.2, 0.8, 0], scaleY: 0.4, transition: { duration: 0.32 } }}
+                transition={{ duration: 0.38, ease: "easeOut" }}
+              >
+                <PixelChute />
               </motion.div>
             )}
           </AnimatePresence>
@@ -1018,11 +1272,16 @@ export default function Byte() {
             className="byte-btn pointer-events-auto block cursor-grab select-none rounded-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-primary active:cursor-grabbing"
             style={{ touchAction: "none", WebkitTouchCallout: "none" } as CSSProperties}
           >
-            <span
-              className="block transition-transform duration-150"
-              style={{ transform: `translateY(${lifted ? -8 : 0}px) scaleX(${form === "icon" ? 1 : facing})` }}
-            >
-              <PixelSprite pixels={pixels} typing={thinking} />
+            {/* lean (scroll wobble) > squash (walls, floor) > hover lift + facing. Lean/squash are set by the animation loop. */}
+            <span ref={leanEl} className="block" style={{ transformOrigin: "50% 100%" }}>
+              <span ref={squashEl} className="block">
+                <span
+                  className="block transition-transform duration-150"
+                  style={{ transform: `translateY(${lifted ? -8 : 0}px) scaleX(${form === "icon" ? 1 : facing})` }}
+                >
+                  <PixelSprite pixels={pixels} typing={thinking} />
+                </span>
+              </span>
             </span>
           </button>
         </div>
