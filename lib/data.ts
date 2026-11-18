@@ -30,7 +30,7 @@ export const profile = {
   github: "https://github.com/pancheeze",
   githubHandle: "@pancheeze",
   linkedin: "https://www.linkedin.com/in/paul-pancho-76b8103a5/",
-  facebook: "https://www.facebook.com/share/1DwHRaC69i/",
+  facebook: "https://www.facebook.com/paulpancho.21",
   // Status pill above the hero heading; set to "" to hide it.
   availability: "Open to internships & collaborations",
   // Put the PDF in public/cv/ and set the path here; the Download CV button only shows when set.
