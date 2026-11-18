@@ -57,7 +57,12 @@ const SECRET_REPLIES: Record<Secret, string> = {
   hacker: "Access granted. Welcome, root. (Just kidding, I only know about Paul 😄)",
 };
 // Every 3rd reminder is one of these, in turn. "zel" is never named: it's meant for one person.
-const SECRET_HINTS = ["i know secret words 👀", "one secret word is just for someone special ♥"];
+const SECRET_HINTS = [
+  "i know secret words 👀",
+  "what happens if you type paul? 😎",
+  "type pancheeze and smile 📸",
+  "one secret word is just for someone special ♥",
+];
 const secretHint = (n: number) => SECRET_HINTS[Math.floor(n / 3) % SECRET_HINTS.length];
 const isNightNow = () => {
   const h = new Date().getHours();
