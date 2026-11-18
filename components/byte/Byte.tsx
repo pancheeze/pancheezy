@@ -56,7 +56,9 @@ const SECRET_REPLIES: Record<Secret, string> = {
   camera: "Say cheeze! 📸 *click*",
   hacker: "Access granted. Welcome, root. (Just kidding, I only know about Paul 😄)",
 };
-const SECRET_HINT = "i know secret words 👀";
+// Every 3rd reminder is one of these, in turn. "zel" is never named: it's meant for one person.
+const SECRET_HINTS = ["i know secret words 👀", "one secret word is just for someone special ♥"];
+const secretHint = (n: number) => SECRET_HINTS[Math.floor(n / 3) % SECRET_HINTS.length];
 const isNightNow = () => {
   const h = new Date().getHours();
   return h >= 22 || h < 5;
@@ -391,7 +393,8 @@ export default function Byte() {
           // Remind visitors every ~15-20s, even after they've chatted with him (every 3rd time: the secret-word hint).
           if (Date.now() - lastAsk.current > ASK_EVERY_MS) {
             lastAsk.current = Date.now();
-            say(++reminders.current % 3 === 0 ? SECRET_HINT : ASK_ME, 4500);
+            const n = ++reminders.current;
+            say(n % 3 === 0 ? secretHint(n) : ASK_ME, 4500);
           }
           schedule(rand(4000, 7000));
         }
@@ -403,7 +406,10 @@ export default function Byte() {
         if (Math.abs(x - pos.current.x) < 80) x = pos.current.x > maxX() / 2 ? EDGE + rand(0, 60) : maxX() - rand(0, 60);
         walkTo(x, () => {
           setMode("idle");
-          if (Math.random() < 0.45) say(++reminders.current % 3 === 0 ? SECRET_HINT : ASK_ME, 4500);
+          if (Math.random() < 0.45) {
+            const n = ++reminders.current;
+            say(n % 3 === 0 ? secretHint(n) : ASK_ME, 4500);
+          }
           schedule(rand(2500, 5000));
         });
       } else if (roll < (nightRef.current ? 0.75 : 0.88)) {
