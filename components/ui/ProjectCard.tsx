@@ -74,6 +74,16 @@ export default function ProjectCard({ project, index }: { project: Project; inde
               <ExternalLink size={15} />
             </a>
           )}
+          {/* Opens Byte (components/byte) already asking about this project. */}
+          <button
+            type="button"
+            onClick={() =>
+              window.dispatchEvent(new CustomEvent("byte:ask", { detail: `Tell me about ${project.name}` }))
+            }
+            className="ml-auto font-mono text-xs text-secondary transition-colors hover:text-primary"
+          >
+            ask byte →
+          </button>
         </div>
       </div>
     </motion.article>

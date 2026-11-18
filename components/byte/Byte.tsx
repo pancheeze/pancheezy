@@ -4,7 +4,7 @@ import { CSSProperties, FormEvent, Fragment, PointerEvent as ReactPointerEvent, 
 import { AnimatePresence, motion } from "framer-motion";
 import { Send, X } from "lucide-react";
 import PixelSprite from "./PixelSprite";
-import { byteFrame, decryptFrame, Face, GRID_H, GRID_W, ICON_FRAME, Legs, Pixel } from "./sprites";
+import { byteFrame, CAMERA_FRAME, decryptFrame, Face, GRID_H, GRID_W, hackerize, ICON_FRAME, Legs, Pixel, withNightcap, withShades } from "./sprites";
 import Link from "next/link";
 import { actionsFor, ByteAction, suggestedQuestions } from "@/lib/byte";
 import { profile, projects } from "@/lib/data";
@@ -34,8 +34,33 @@ const GLOW_COLORS = ["#ECA35F", "#7FA88B", "#7AA5C4"]; // same order and 6s loop
 const GLOW_CYCLE_MS = 6000;
 const TYPE_MS = 38; // per character in the terminal prompt
 const ASK_EVERY_MS = 15_000; // parked Byte repeats "ask me about ..." at most this often
-const CHAT_KEY = "byte-chat-v1"; // sessionStorage: the chat survives closing Byte and changing pages
+const CHAT_KEY = "byte-chat-v2"; // localStorage: the chat is remembered for returning visitors
+const CHAT_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+const LAST_SEEN_KEY = "byte-last-seen";
+const WELCOME_BACK_AFTER_MS = 30 * 60 * 1000;
 const MAX_SAVED = 40;
+const SECRET_MS = 4200; // how long a secret-word reaction lasts
+
+// Secret words: typed anywhere on the page (keyboard) or sent as a chat message on their own.
+type Secret = "love" | "boss" | "camera" | "hacker";
+const SECRET_WORDS: Record<string, Secret> = { zel: "love", paul: "boss", pancheeze: "camera", sudo: "hacker" };
+const SECRET_LINES: Record<Secret, string[]> = {
+  love: ["zel?! ♥ heart.exe overflowing", "♥ hi zel! ♥", "zel detected ♥ ♥ ♥"],
+  boss: ["creator detected. hi boss", "paul! the guy who built me", "all systems nominal, boss"],
+  camera: ["say cheeze!"],
+  hacker: ["access granted", "welcome, root", "hacking the mainframe... jk"],
+};
+const SECRET_REPLIES: Record<Secret, string> = {
+  love: "♥ ♥ ♥ Zel! My heart.exe just overflowed. You must be someone very special to Paul.",
+  boss: "Creator detected 😎 Hi boss! All systems running smoothly.",
+  camera: "Say cheeze! 📸 *click*",
+  hacker: "Access granted. Welcome, root. (Just kidding, I only know about Paul 😄)",
+};
+const SECRET_HINT = "i know secret words 👀";
+const isNightNow = () => {
+  const h = new Date().getHours();
+  return h >= 22 || h < 5;
+};
 
 type Mode = "idle" | "walk" | "sleep" | "held" | "air" | "dizzy" | "pet" | "glide" | "icon";
 type Msg = { role: "user" | "assistant"; content: string };
@@ -50,7 +75,9 @@ const GREETING: Msg = {
 function loadChat(): Msg[] {
   if (typeof window === "undefined") return [GREETING];
   try {
-    const saved: unknown = JSON.parse(sessionStorage.getItem(CHAT_KEY) ?? "null");
+    const stored = JSON.parse(localStorage.getItem(CHAT_KEY) ?? "null") as { savedAt?: number; messages?: unknown } | null;
+    if (!stored || typeof stored.savedAt !== "number" || Date.now() - stored.savedAt > CHAT_TTL_MS) return [GREETING];
+    const saved = stored.messages;
     if (!Array.isArray(saved)) return [GREETING];
     const valid = saved.filter(
       (m): m is Msg => (m?.role === "user" || m?.role === "assistant") && typeof m?.content === "string"
@@ -63,7 +90,11 @@ function loadChat(): Msg[] {
 
 function saveChat(messages: Msg[]) {
   try {
-    if (messages.length > 1) sessionStorage.setItem(CHAT_KEY, JSON.stringify([GREETING, ...messages.slice(1).slice(-MAX_SAVED)]));
+    if (messages.length > 1)
+      localStorage.setItem(
+        CHAT_KEY,
+        JSON.stringify({ savedAt: Date.now(), messages: [GREETING, ...messages.slice(1).slice(-MAX_SAVED)] })
+      );
   } catch {
     // Private mode or storage blocked: the chat just won't be remembered.
   }
@@ -77,6 +108,7 @@ const randomGlyph = () => GLYPH_CHARS[Math.floor(Math.random() * GLYPH_CHARS.len
 // and drawn straight to the DOM, so they don't re-render React.
 type Spark = {
   el: HTMLSpanElement;
+  chars: string; // characters it scrambles through
   x: number; // viewport px (top-left)
   y: number;
   vx: number; // px/s
@@ -273,7 +305,18 @@ export default function Byte() {
   const squash = useRef<SquashState>({ x: { d: 0, v: 0, hold: 0 }, y: { d: 0, v: 0, hold: 0 }, ox: "center", oy: "bottom" });
   const chuteRef = useRef(false);
   const burst = useRef(0);
+  const burstKind = useRef<"fan" | "rain">("fan");
   const [chute, setChute] = useState(false);
+  // Secret words, night mode, the camera's flash and polaroid.
+  const [special, setSpecial] = useState<Secret | null>(null);
+  const specialRef = useRef<Secret | null>(null);
+  const specialTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const [night, setNight] = useState(false);
+  const nightRef = useRef(false);
+  const [flash, setFlash] = useState(0); // key for the flash overlay (0 = none)
+  const [polaroid, setPolaroid] = useState(0); // key for the polaroid (0 = none)
+  const reminders = useRef(0);
+  const pendingQuestion = useRef<string | null>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
   const shakenRef = useRef(false);
   const openRef = useRef(false);
@@ -339,16 +382,16 @@ export default function Byte() {
             setFacing(-1);
             schedule(rand(3000, 6000));
           });
-        } else if (Math.random() < 0.3) {
+        } else if (Math.random() < (nightRef.current ? 0.45 : 0.3)) {
           setMode("sleep");
           say(null);
           schedule(rand(8000, 12000));
         } else {
           setMode("idle");
-          // Remind visitors every ~15-20s, even after they've chatted with him.
+          // Remind visitors every ~15-20s, even after they've chatted with him (every 3rd time: the secret-word hint).
           if (Date.now() - lastAsk.current > ASK_EVERY_MS) {
             lastAsk.current = Date.now();
-            say(ASK_ME, 4500);
+            say(++reminders.current % 3 === 0 ? SECRET_HINT : ASK_ME, 4500);
           }
           schedule(rand(4000, 7000));
         }
@@ -360,10 +403,10 @@ export default function Byte() {
         if (Math.abs(x - pos.current.x) < 80) x = pos.current.x > maxX() / 2 ? EDGE + rand(0, 60) : maxX() - rand(0, 60);
         walkTo(x, () => {
           setMode("idle");
-          if (Math.random() < 0.45) say(ASK_ME, 4500);
+          if (Math.random() < 0.45) say(++reminders.current % 3 === 0 ? SECRET_HINT : ASK_ME, 4500);
           schedule(rand(2500, 5000));
         });
-      } else if (roll < 0.88) {
+      } else if (roll < (nightRef.current ? 0.75 : 0.88)) {
         setMode("idle");
         setFacing((f) => (f === 1 ? -1 : 1));
         schedule(rand(2000, 4000));
@@ -433,7 +476,13 @@ export default function Byte() {
     const lean = { a: 0, v: 0 }; // degrees, deg/s
     if (elRef.current) elRef.current.style.transform = `translate3d(${pos.current.x}px, 0, 0)`;
 
-    const spawnSpark = (now: number, vx: number, vy: number, moving: boolean, fling?: { vx: number; vy: number }) => {
+    const spawnSpark = (
+      now: number,
+      vx: number,
+      vy: number,
+      moving: boolean,
+      fling?: { vx: number; vy: number; x?: number; y?: number }
+    ) => {
       const layer = glyphLayer.current;
       if (!layer) return;
       const p = pos.current;
@@ -441,9 +490,9 @@ export default function Byte() {
       let x: number;
       let y: number;
       if (fling) {
-        // Celebration burst: from the top of his head.
-        x = p.x + rand(18, W - 22);
-        y = top + rand(0, 14);
+        // Bursts: from the top of his head, or from a given spot (offset from his top-left).
+        x = p.x + (fling.x ?? rand(18, W - 22));
+        y = top + (fling.y ?? rand(0, 14));
       } else if (moving) {
         // Released from the trailing side, so the stream lines up behind him.
         x = vx > 0 ? p.x + rand(-6, 12) : vx < 0 ? p.x + rand(W - 12, W + 6) : p.x + rand(0, W);
@@ -454,13 +503,22 @@ export default function Byte() {
         y = side < 0.7 ? top + rand(12, 46) : top + rand(-6, 6);
       }
       const phase = (now % GLOW_CYCLE_MS) / GLOW_CYCLE_MS;
+      const sp = specialRef.current;
+      const chars = sp === "love" ? "♥" : sp === "hacker" ? "01" : GLYPH_CHARS;
       const el = document.createElement("span");
       el.className = "byte-glyph font-mono";
-      el.textContent = randomGlyph();
-      el.style.color = GLOW_COLORS[Math.round(phase * GLOW_COLORS.length) % GLOW_COLORS.length];
+      el.textContent = chars[Math.floor(Math.random() * chars.length)];
+      el.style.color =
+        sp === "love"
+          ? pick(["#E8707A", "#F2A0B0"])
+          : sp === "hacker"
+            ? "#8FD19E"
+            : GLOW_COLORS[Math.round(phase * GLOW_COLORS.length) % GLOW_COLORS.length];
+      if (sp === "love") el.style.fontSize = "13px";
       layer.appendChild(el);
       sparks.current.push({
         el,
+        chars,
         x,
         y,
         // A little of Byte's motion, reversed, so the trail stretches out behind him.
@@ -488,8 +546,8 @@ export default function Byte() {
         s.vy += SPARK_BUOYANCY * dt;
         s.x += (s.vx + Math.sin(s.age * 4 + s.seed) * 7) * dt; // gentle sway
         s.y += s.vy * dt;
-        if (s.age < SPARK_SCRAMBLE_S && now - s.lastScramble > 80) {
-          s.el.textContent = randomGlyph();
+        if (s.age < SPARK_SCRAMBLE_S && now - s.lastScramble > 80 && s.chars.length > 1) {
+          s.el.textContent = s.chars[Math.floor(Math.random() * s.chars.length)];
           s.lastScramble = now;
         }
         const k = s.age / s.life;
@@ -607,7 +665,8 @@ export default function Byte() {
       prevY = p.y;
       const moving = Math.abs(vx) > 5 || Math.abs(vy) > 5;
       sinceSpark += dt;
-      if (glyphsOnRef.current && !reduced.current && sinceSpark >= sparkEvery(m, moving)) {
+      const every = specialRef.current === "love" ? 0.16 : sparkEvery(m, moving);
+      if (glyphsOnRef.current && !reduced.current && sinceSpark >= every) {
         sinceSpark = 0;
         spawnSpark(now, vx, vy, moving);
       }
@@ -616,9 +675,14 @@ export default function Byte() {
         burst.current = 0;
         if (!reduced.current)
           for (let i = 0; i < n; i++) {
-            const angle = (-Math.PI / 2) + rand(-1.1, 1.1); // fan upwards
-            const speed = rand(90, 190);
-            spawnSpark(now, 0, 0, false, { vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed });
+            if (burstKind.current === "rain") {
+              // Hacker mode: green 0/1 rain falling from above him.
+              spawnSpark(now, 0, 0, false, { vx: rand(-6, 6), vy: rand(80, 150), x: rand(-60, W + 60), y: rand(-150, -30) });
+            } else {
+              const angle = -Math.PI / 2 + rand(-1.1, 1.1); // fan upwards
+              const speed = rand(90, 190);
+              spawnSpark(now, 0, 0, false, { vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed });
+            }
           }
       }
       stepSparks(now, dt);
@@ -641,13 +705,24 @@ export default function Byte() {
     const start = parked.current ? maxX() : Math.max(EDGE, maxX() - 40);
     pos.current.x = start;
     target.current = start;
+    nightRef.current = isNightNow();
+    setNight(nightRef.current);
+    // First line: welcome back (returning visitor) > night owl > the usual.
+    let returning = false;
+    try {
+      const lastSeen = Number(localStorage.getItem(LAST_SEEN_KEY));
+      returning = lastSeen > 0 && Date.now() - lastSeen > WELCOME_BACK_AFTER_MS;
+      localStorage.setItem(LAST_SEEN_KEY, String(Date.now()));
+    } catch {}
+    const firstLine = returning ? "welcome back!" : nightRef.current ? "working late too?" : ASK_ME;
+    lastAsk.current = Date.now();
     setReady(true);
     if (reduced.current) {
-      say(ASK_ME, 6000);
+      say(firstLine, 6000);
       return;
     }
     wanderTimer.current = setTimeout(() => {
-      say(ASK_ME, 4500);
+      say(firstLine, 4500);
       wanderTimer.current = setTimeout(() => nextAction(true), 3000);
     }, 2500);
     return () => {
@@ -844,6 +919,97 @@ export default function Byte() {
 
   const toggleChat = () => (openRef.current ? closeChat() : openChat());
 
+  // ----- Secret words -----
+  const playSecret = useCallback(
+    (kind: Secret) => {
+      if (openRef.current || decrypting.current || specialRef.current) return;
+      const m = modeRef.current;
+      if (m === "held" || m === "air" || m === "glide") return;
+      const later = (ms: number, fn: () => void) => specialTimers.current.push(setTimeout(fn, ms));
+      const finish = () => {
+        specialRef.current = null;
+        setSpecial(null);
+        burstKind.current = "fan";
+        if (modeRef.current === "pet") setMode("idle");
+        settle(1500);
+      };
+      clearTimeout(wanderTimer.current);
+      onArrive.current = null;
+      specialRef.current = kind;
+      setSpecial(kind);
+      lastAsk.current = Date.now();
+
+      if (kind === "love") {
+        setMode("pet"); // heart eyes + floating hearts
+        say(pick(SECRET_LINES.love), SECRET_MS);
+        later(SECRET_MS, finish);
+      } else if (kind === "boss") {
+        setMode("idle");
+        runDecrypt(withShades(byteFrame("happy", "stand", 0)));
+        say(pick(SECRET_LINES.boss), SECRET_MS);
+        later(SECRET_MS, finish);
+      } else if (kind === "hacker") {
+        setMode("idle");
+        runDecrypt(hackerize(byteFrame("normal", "stand", 0)));
+        say(pick(SECRET_LINES.hacker), SECRET_MS);
+        burstKind.current = "rain";
+        burst.current = 18;
+        later(1300, () => (burst.current = 14));
+        later(SECRET_MS, finish);
+      } else {
+        // Camera: turn into a camera, "say cheeze!", flash, a polaroid pops out, then back to Byte.
+        setMode("idle");
+        runDecrypt(CAMERA_FRAME);
+        say("say cheeze!", 1500);
+        later(1200, () => {
+          if (!reduced.current) setFlash(Date.now());
+          setPolaroid(Date.now());
+          say("click! cheeze~", 2000);
+        });
+        later(3000, () => runDecrypt(byteFrame("happy", "stand", 0), finish));
+        later(5600, () => setPolaroid(0));
+      }
+    },
+    [runDecrypt, say, setMode, settle]
+  );
+
+  // Typing a secret word anywhere on the page (not inside a text field).
+  useEffect(() => {
+    let typed = "";
+    const onKey = (e: KeyboardEvent) => {
+      const t = e.target as HTMLElement | null;
+      if (t?.closest?.("input, textarea, select, [contenteditable='true']")) return;
+      if (e.key.length !== 1 || e.ctrlKey || e.metaKey || e.altKey) return;
+      typed = (typed + e.key.toLowerCase()).slice(-12);
+      const hit = Object.entries(SECRET_WORDS).find(([word]) => typed.endsWith(word));
+      if (hit) {
+        typed = "";
+        playSecret(hit[1]);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [playSecret]);
+
+  useEffect(() => {
+    const timers = specialTimers.current;
+    return () => timers.forEach(clearTimeout);
+  }, []);
+
+  // "ask byte →" on project cards: open the chat already asking about that project.
+  const [askNonce, setAskNonce] = useState(0);
+  useEffect(() => {
+    const onAsk = (e: Event) => {
+      const q = (e as CustomEvent<unknown>).detail;
+      if (typeof q !== "string") return;
+      pendingQuestion.current = q;
+      if (!openRef.current) openChat();
+      setAskNonce((n) => n + 1);
+    };
+    window.addEventListener("byte:ask", onAsk);
+    return () => window.removeEventListener("byte:ask", onAsk);
+  }, [openChat]);
+
   useEffect(() => {
     if (!open) return;
     inputRef.current?.focus();
@@ -993,6 +1159,19 @@ export default function Byte() {
   const ask = async (question: string) => {
     const q = question.trim().slice(0, MAX_INPUT);
     if (!q || thinking) return;
+
+    // A secret word on its own: a canned reply, then the chat closes so Byte can react.
+    const secret = q.length <= 24 ? SECRET_WORDS[q.toLowerCase().replace(/[^a-z]/g, "")] : undefined;
+    if (secret) {
+      setMessages((m) => [...m, { role: "user", content: q }, { role: "assistant", content: SECRET_REPLIES[secret] }]);
+      setInput("");
+      setTimeout(() => {
+        closeChat();
+        setTimeout(() => playSecret(secret), 1100);
+      }, 1200);
+      return;
+    }
+
     const history = [...messages, { role: "user" as const, content: q }];
     setMessages(history);
     setInput("");
@@ -1025,18 +1204,18 @@ export default function Byte() {
     if (a.kind === "link")
       return (
         <Link key={a.href} href={a.href} onClick={closeChat} className={actionClass}>
-          {a.label} â†’
+          {a.label} →
         </Link>
       );
     if (a.kind === "download")
       return (
         <a key={a.href} href={a.href} download className={actionClass}>
-          {a.label} â†“
+          {a.label} ↓
         </a>
       );
     return (
       <button key={a.id} type="button" onClick={() => goToSection(a.id)} className={actionClass}>
-        {a.label} â†’
+        {a.label} →
       </button>
     );
   };
@@ -1045,6 +1224,15 @@ export default function Byte() {
     e.preventDefault();
     ask(input);
   };
+
+  // Ask the project-card question once the chat is open.
+  useEffect(() => {
+    if (!open || !pendingQuestion.current || thinking) return;
+    const q = pendingQuestion.current;
+    pendingQuestion.current = null;
+    ask(q);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- ask() is recreated every render; run only when opened/asked
+  }, [open, askNonce]);
 
   if (!ready) return null;
 
@@ -1064,7 +1252,10 @@ export default function Byte() {
   }
   if (mode === "dizzy") face = "dizzy";
   if (mode === "pet") face = "love";
-  const settled = form === "icon" ? ICON_FRAME : byteFrame(face, legs, look);
+  let settled = form === "icon" ? ICON_FRAME : special === "camera" ? CAMERA_FRAME : byteFrame(face, legs, look);
+  if (form === "byte" && special === "boss") settled = withShades(settled);
+  if (form === "byte" && special === "hacker") settled = hackerize(settled);
+  if (form === "byte" && night && special !== "camera") settled = withNightcap(settled);
   if (!scramble) shown.current = settled;
   const pixels = scramble ?? settled;
   const hideForForm = typingElsewhere && !open;
@@ -1171,10 +1362,24 @@ export default function Byte() {
             </form>
             <p className="-mt-1 px-4 pb-2.5 text-center text-[11px] text-text-muted">
               Byte is an AI helper and can make mistakes. Check details with {firstName}.
+              <span className="mt-0.5 block font-mono text-secondary/80">psst… I react to secret words. try sudo 👀</span>
             </p>
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* "pancheeze": one soft camera flash (skipped for reduced motion). */}
+      {flash > 0 && (
+        <motion.div
+          key={flash}
+          aria-hidden
+          className="pointer-events-none fixed inset-0 z-[85] bg-white"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: [0, 0.4, 0] }}
+          transition={{ duration: 0.45, times: [0, 0.15, 1] }}
+          onAnimationComplete={() => setFlash(0)}
+        />
+      )}
 
       {/* Glyph particles (screen-space, so they trail behind him). Filled by the animation loop. */}
       <div
@@ -1229,7 +1434,35 @@ export default function Byte() {
           </AnimatePresence>
 
           {/* Soft glow, always on while he's Byte. */}
-          {showGlow && <span aria-hidden className="byte-glow" style={{ animationDelay: `0s, ${glowDelay}ms` }} />}
+          {showGlow && (
+            <span
+              aria-hidden
+              className={`byte-glow ${special === "love" ? "byte-glow-love" : special === "hacker" ? "byte-glow-hacker" : ""}`}
+              style={{ animationDelay: `0s, ${glowDelay}ms` }}
+            />
+          )}
+
+          {/* "pancheeze": the polaroid that pops out of the camera. */}
+          <AnimatePresence>
+            {polaroid > 0 && (
+              <motion.div
+                key={polaroid}
+                aria-hidden
+                className="pointer-events-none absolute bottom-[78px] left-1/2 -ml-[29px] w-[58px] rounded-[2px] bg-[#E9E6DF] p-1 pb-0 shadow-glass"
+                initial={{ opacity: 0, y: 20, rotate: -10, scale: 0.6 }}
+                animate={{ opacity: 1, y: -16, rotate: 7, scale: 1 }}
+                exit={{ opacity: 0, y: -46, rotate: 12, transition: { duration: 0.6 } }}
+                transition={{ type: "spring", stiffness: 220, damping: 14 }}
+              >
+                <div className="h-[46px] overflow-hidden bg-[#13211D]">
+                  <div style={{ transform: "scale(0.62)", transformOrigin: "0 0", marginLeft: 3, marginTop: 1 }}>
+                    <PixelSprite pixels={withShades(byteFrame("happy", "stand", 0))} />
+                  </div>
+                </div>
+                <p className="py-0.5 text-center font-pixel text-[8px] leading-tight text-[#080A0D]">pancheeze ✌</p>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {mode === "sleep" && form === "byte" && (
             <span aria-hidden className="byte-zzz absolute -top-3 right-0 font-pixel text-sm text-secondary">
@@ -1277,7 +1510,7 @@ export default function Byte() {
               <span ref={squashEl} className="block">
                 <span
                   className="block transition-transform duration-150"
-                  style={{ transform: `translateY(${lifted ? -8 : 0}px) scaleX(${form === "icon" ? 1 : facing})` }}
+                  style={{ transform: `translateY(${lifted ? -8 : 0}px) scaleX(${form === "icon" || special === "camera" ? 1 : facing})` }}
                 >
                   <PixelSprite pixels={pixels} typing={thinking} />
                 </span>

@@ -19,6 +19,7 @@ const COLORS: Record<string, string> = {
   K: "#E8707A", // cheeks / heart eyes
   G: "#7FA88B", // antenna light, LED
   L: "#98A2AB", // antenna stem, legs
+  W: "#E9E6DF", // camera flash
 };
 
 // Colors the "decrypt" static flickers through: the site's palette.
@@ -135,6 +136,60 @@ export const ICON_FRAME: Pixel[] = [...rowsToMap(ICON).values()].map((p) =>
   // Tag the "_" cursor so CSS can blink it (faster while Byte is answering).
   p.c === COLORS.F && p.y === 13 ? { ...p, k: "cursor" } : p
 );
+
+// ---------- Secret-word looks ----------
+
+// "pancheeze": Byte turns into a pixel camera.
+const CAMERA = [
+  "..................",
+  "..................",
+  "..................",
+  "..................",
+  "...AAAA.....LLL...",
+  ".AAAAAAAAAAAAAAAA.",
+  ".ABBBBBBBBBBBWWBA.",
+  ".ABBBBAAAAAABBBBA.",
+  ".ABBBAASSSSAABBBA.",
+  ".ABBBASSXXSSABBBA.",
+  ".ABBBASSXSSSABBBA.",
+  ".ABBBASSSSSSABBBA.",
+  ".ABBBAASSSSAABBBA.",
+  ".ABBBBAAAAAABBBBA.",
+  ".ABBBBBBBBBBBBBBA.",
+  ".AAAAAAAAAAAAAAAA.",
+];
+export const CAMERA_FRAME: Pixel[] = [...rowsToMap(CAMERA).values()];
+
+const SHADES = "#0B0E12";
+/** "paul": pixel sunglasses over his eyes. */
+export function withShades(frame: Pixel[]): Pixel[] {
+  const map = new Map(frame.map((p) => [`${p.x},${p.y}`, p]));
+  const put = (x: number, y: number, c: string) => map.set(`${x},${y}`, { x, y, c });
+  for (const x of [5, 6, 7, 8, 10, 11, 12, 13]) put(x, 8, SHADES);
+  for (const x of [5, 6, 7, 10, 11, 12]) put(x, 9, SHADES);
+  put(9, 8, SHADES); // bridge
+  put(6, 8, COLORS.W); // glints
+  put(11, 8, COLORS.W);
+  return [...map.values()];
+}
+
+/** Night mode: a pixel nightcap (with pom-pom) replaces the antenna. */
+export function withNightcap(frame: Pixel[]): Pixel[] {
+  const map = new Map(frame.filter((p) => p.y > 2).map((p) => [`${p.x},${p.y}`, p]));
+  const put = (x: number, y: number, c: string) => map.set(`${x},${y}`, { x, y, c });
+  for (let x = 4; x <= 13; x++) put(x, 2, "#D6D2CA"); // trim
+  for (let x = 6; x <= 12; x++) put(x, 1, "#5B87A8");
+  for (let x = 10; x <= 13; x++) put(x, 0, "#5B87A8");
+  for (const [x, y] of [[14, 0], [15, 0], [14, 1], [15, 1]]) put(x, y, COLORS.W); // pom-pom
+  return [...map.values()];
+}
+
+/** "sudo": hacker mode, the face glows terminal green. */
+export function hackerize(frame: Pixel[]): Pixel[] {
+  return frame.map((p) =>
+    p.y >= 5 && p.y <= 12 && p.x >= 3 && p.x <= 14 && (p.c === COLORS.F || p.c === COLORS.K) ? { ...p, c: "#8FD19E" } : p
+  );
+}
 
 /**
  * One frame of the "decrypt" transition from one sprite to another, like the
