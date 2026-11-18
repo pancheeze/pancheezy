@@ -9,6 +9,7 @@ import GlyphField from "@/components/layout/GlyphField";
 import Byte from "@/components/byte/ByteSafe";
 import { Inter, Source_Code_Pro, Pixelify_Sans } from "next/font/google";
 import { profile } from "@/lib/data";
+import { SITE_URL } from "@/lib/site";
 
 // Fonts are bundled with the site (no render-blocking request to Google Fonts).
 // Each exposes a CSS variable used by Tailwind and by the canvas animations.
@@ -31,7 +32,7 @@ const pixelifySans = Pixelify_Sans({
   display: "swap",
 });
 
-const siteUrl = "https://pancheezy.vercel.app";
+const siteUrl = SITE_URL;
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),

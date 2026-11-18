@@ -1291,7 +1291,7 @@ export default function Byte() {
           >
             <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
               <p className="font-pixel text-sm text-text-secondary">
-                <span className="text-secondary">byte</span>@pancheezy:<span className="text-accent">~</span>$
+                <span className="text-secondary">byte</span>@pancheeze:<span className="text-accent">~</span>$
               </p>
               <button
                 onClick={closeChat}

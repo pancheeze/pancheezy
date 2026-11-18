@@ -20,6 +20,7 @@ export async function generateMetadata({ params }: ProjectPageProps): Promise<Me
   return {
     title: `${project.name} — Project Detail`,
     description: project.description,
+    alternates: { canonical: `/projects/${project.slug}` },
     openGraph: {
       title: project.name,
       description: project.description,

@@ -12,6 +12,7 @@ import { getContributions } from "@/lib/github";
 
 export const metadata: Metadata = {
   title: "Paul Anthony Pancho — Full-Stack Developer & BSIT Student",
+  alternates: { canonical: "/" }, // the official address is pancheeze.dev, not the vercel.app one
 };
 
 export default async function HomePage() {
