@@ -29,7 +29,6 @@ const DECRYPT_MS = 700;
 const DECRYPT_TICK = 45; // same tick as the loading screen
 const MAX_INPUT = 300;
 const PARK_BELOW = 768; // px: on narrower screens (and any touch screen) Byte stays in the corner
-const MET_KEY = "byte-met"; // sessionStorage: the curious glow stops after the first tap
 const GLYPH_CHARS = "01#$%<>/*+=;";
 const GLOW_COLORS = ["#ECA35F", "#7FA88B", "#7AA5C4"]; // same order and 6s loop as .byte-glow in globals.css
 const GLOW_CYCLE_MS = 6000;
@@ -66,15 +65,6 @@ function saveChat(messages: Msg[]) {
     if (messages.length > 1) sessionStorage.setItem(CHAT_KEY, JSON.stringify([GREETING, ...messages.slice(1).slice(-MAX_SAVED)]));
   } catch {
     // Private mode or storage blocked: the chat just won't be remembered.
-  }
-}
-
-function hasMetByte(): boolean {
-  if (typeof window === "undefined") return false;
-  try {
-    return sessionStorage.getItem(MET_KEY) === "1";
-  } catch {
-    return false;
   }
 }
 
@@ -187,7 +177,6 @@ export default function Byte() {
   const [input, setInput] = useState("");
   const [thinking, setThinking] = useState(false);
   const [typingElsewhere, setTypingElsewhere] = useState(false);
-  const [curious, setCurious] = useState(() => !hasMetByte());
   const [glyphs, setGlyphs] = useState<{ id: number; x: number; y: number; color: string }[]>([]);
   // Starts the CSS color loop at the same point as the JS clock, so glyphs match the glow's color.
   const [glowDelay] = useState(() => (typeof performance === "undefined" ? 0 : -(performance.now() % GLOW_CYCLE_MS)));
@@ -490,7 +479,7 @@ export default function Byte() {
   }, [mode]);
 
   // Decrypting glyphs drift off Byte while he's waiting to be found (2-3 at a time, in the glow's color).
-  const glyphsOn = curious && !open && form === "byte" && !typingElsewhere;
+  const glyphsOn = !open && form === "byte" && !typingElsewhere;
   useEffect(() => {
     if (!glyphsOn || reduced.current) return;
     let n = 0;
@@ -530,18 +519,7 @@ export default function Byte() {
     }, DECRYPT_TICK);
   }, []);
 
-  // The visitor found Byte: stop the curious glow for the rest of the visit.
-  const markMet = useCallback(() => {
-    setCurious(false);
-    try {
-      sessionStorage.setItem(MET_KEY, "1");
-    } catch {
-      // Storage blocked: the glow just comes back on the next page load.
-    }
-  }, []);
-
   const openChat = useCallback(() => {
-    markMet();
     clearTimeout(wanderTimer.current);
     openRef.current = true;
     say(null);
@@ -555,7 +533,7 @@ export default function Byte() {
     setMode(reduced.current ? "icon" : "glide");
     if (reduced.current) pos.current = { x: maxX(), y: 0, vx: 0, vy: 0 };
     setTimeout(() => setOpen(true), reduced.current ? 0 : DECRYPT_MS - 150);
-  }, [markMet, runDecrypt, say, setMode]);
+  }, [runDecrypt, say, setMode]);
 
   const closeChat = useCallback(() => {
     setOpen(false);
@@ -600,7 +578,6 @@ export default function Byte() {
       wasSleeping: modeRef.current === "sleep",
     };
     e.currentTarget.setPointerCapture(e.pointerId);
-    markMet();
     if (openRef.current) return; // the chat icon only taps
     press.current.petTimer = setTimeout(() => {
       if (!press.current || press.current.dragging) return;
@@ -771,7 +748,7 @@ export default function Byte() {
   const pixels = scramble ?? settled;
   const hideForForm = typingElsewhere && !open;
   const showBubble = !!bubble && form === "byte" && !open && mode !== "sleep" && !hideForForm;
-  const showGlow = (curious || hovered) && form === "byte" && !open && !hideForForm && !scramble;
+  const showGlow = form === "byte" && !open && !hideForForm && !scramble;
   const lifted = hovered && (mode === "idle" || mode === "walk") && !reduced.current;
 
   return (
@@ -905,7 +882,7 @@ export default function Byte() {
             )}
           </AnimatePresence>
 
-          {/* Curious glow (until the first tap; also on hover) and decrypting glyphs. */}
+          {/* Soft glow (always on while he's Byte) and decrypting glyphs. */}
           {showGlow && <span aria-hidden className="byte-glow" style={{ animationDelay: `0s, ${glowDelay}ms` }} />}
           {glyphs.map((g) => (
             <DecryptGlyph key={g.id} x={g.x} y={g.y} color={g.color} />
