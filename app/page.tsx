@@ -63,9 +63,10 @@ export default async function HomePage() {
       />
       <LoadingScreen />
       <Hero />
-      {/* Projects come first: they're the proof, so recruiters see them right after the intro. */}
-      <Projects activity={activity} />
+      {/* A short About first (compact on phones), then the projects as proof. The hero's
+          "View projects" button skips straight to them. */}
       <About />
+      <Projects activity={activity} />
       <Skills />
       <Timeline />
       <Certificates />

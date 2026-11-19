@@ -1,7 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import { motion } from "framer-motion";
 import {
+  ChevronDown,
   GraduationCap,
   MapPin,
   Sparkles,
@@ -23,8 +25,12 @@ const interestIcons: Record<string, React.ElementType> = {
   "UI Design": Palette,
 };
 
+// On phones the section is compact (first paragraph, one info line, interest chips) with a
+// "Read more" toggle; from the lg breakpoint up everything is always shown.
 export default function About() {
   const education = [profile.degree, profile.start].filter(Boolean).join(" · ");
+  const [expanded, setExpanded] = useState(false);
+  const mobileExtra = expanded ? "" : "hidden lg:block"; // shown on phones only after "Read more"
 
   return (
     <section id="about" className="section-padding relative">
@@ -35,25 +41,50 @@ export default function About() {
           description="Full-stack developer in the making: from database to interface."
         />
 
-        <div className="grid grid-cols-1 gap-12 lg:grid-cols-5 lg:gap-16">
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-5 lg:gap-16">
           <motion.div
             initial="hidden"
             whileInView="show"
-            viewport={{ once: true, amount: 0.3 }}
+            viewport={{ once: true, amount: 0.2 }}
             variants={staggerContainer(0.12)}
             className="lg:col-span-3"
           >
-            {profile.aboutDescription.map((paragraph) => (
+            {profile.aboutDescription.map((paragraph, i) => (
               <motion.p
                 key={paragraph}
                 variants={fadeUp}
-                className="mb-4 text-base leading-relaxed text-text-secondary last:mb-0 sm:text-lg"
+                className={`mb-4 text-base leading-relaxed text-text-secondary last:mb-0 sm:text-lg ${i > 0 ? mobileExtra : ""}`}
               >
                 {paragraph}
               </motion.p>
             ))}
 
-            <motion.div variants={fadeUp} className="mt-8 space-y-4">
+            {/* Phones: one compact line instead of the three cards below. */}
+            {!expanded && (
+              <motion.p variants={fadeUp} className="mt-5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-text-secondary lg:hidden">
+                <span className="inline-flex items-center gap-1.5">
+                  <GraduationCap size={15} className="text-primary" />
+                  {profile.degree} · {profile.universityShort}
+                </span>
+                <span className="inline-flex items-center gap-1.5">
+                  <MapPin size={15} className="text-secondary" />
+                  {profile.location}
+                </span>
+              </motion.p>
+            )}
+
+            <motion.button
+              variants={fadeUp}
+              type="button"
+              onClick={() => setExpanded((v) => !v)}
+              aria-expanded={expanded}
+              className="mt-4 inline-flex items-center gap-1 font-mono text-sm text-primary transition-colors hover:text-primary-glow lg:hidden"
+            >
+              {expanded ? "Show less" : "Read more"}
+              <ChevronDown size={16} className={`transition-transform ${expanded ? "rotate-180" : ""}`} />
+            </motion.button>
+
+            <motion.div variants={fadeUp} className={`mt-8 space-y-4 ${mobileExtra}`}>
               <div className="glass-card flex items-start gap-4 p-5">
                 <div className="rounded-xl bg-primary/15 p-2.5 text-primary">
                   <GraduationCap size={20} />
@@ -103,7 +134,7 @@ export default function About() {
             </motion.div>
             <motion.div
               variants={fadeUp}
-              className="glass-card mb-8 p-5 font-mono text-[12px] leading-loose tracking-wide sm:text-[13px]"
+              className="glass-card mb-6 p-4 font-mono text-[12px] leading-loose tracking-wide sm:mb-8 sm:p-5 sm:text-[13px]"
             >
               {profile.quickFacts.map(([key, value]) => (
                 // No wrapping between parts: a long value wraps inside its own column
@@ -122,7 +153,8 @@ export default function About() {
               <h3 className="text-sm font-semibold uppercase tracking-wider text-white">Interests</h3>
             </motion.div>
 
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            {/* Phones: small chips in a wrapped row; larger screens: a 2-column card grid. */}
+            <div className="flex flex-wrap gap-2 sm:grid sm:grid-cols-2 sm:gap-3">
               {profile.interests.map((interest) => {
                 const Icon = interestIcons[interest] ?? Code;
                 return (
@@ -130,7 +162,7 @@ export default function About() {
                     key={interest}
                     variants={fadeUp}
                     whileHover={{ y: -4, borderColor: "rgba(236,163,95,0.5)" }}
-                    className="glass-card flex items-center gap-3 p-4"
+                    className="glass-card flex items-center gap-2 px-3 py-2 sm:gap-3 sm:p-4"
                   >
                     <Icon size={18} className="shrink-0 text-primary" />
                     <span className="text-sm text-text-secondary">{interest}</span>

@@ -17,6 +17,10 @@ export interface Project {
   name: string;
   description: string;
   category: string;
+  /** One line on what I personally did, shown on the project card. */
+  role?: string;
+  /** Featured projects get large cards; the rest are listed under "More projects". */
+  featured?: boolean;
   tech: string[];
   github?: string;
   demo?: string;
@@ -32,6 +36,8 @@ export interface Project {
     process: string[];
     challenges: string[];
     gallery: string[];
+    /** How gallery images fill their tiles: "contain" for phone screenshots, "top" for long page designs. Default: cover. */
+    galleryFit?: "contain" | "top";
     result: string;
   };
 }

@@ -120,6 +120,8 @@ export const projects: Project[] = [
     description:
       "A mobile app that screens chicken droppings for early signs of disease. It runs a machine-learning model fully offline on the phone and tells farmers what to do next.",
     category: "Capstone · Mobile + ML",
+    role: "Lead programmer · trained the model · coded the app",
+    featured: true,
     tech: ["Flutter", "Dart", "TensorFlow Lite", "Python"],
     github: "https://github.com/pancheeze/ChickDetect",
     demo: "https://pancheeze.github.io/ChickDetect/",
@@ -168,6 +170,8 @@ export const projects: Project[] = [
     description:
       "A full-stack online shop for motorcycle parts and accessories, with PayPal checkout, automatic SMS and email notifications, an AI shopping assistant and a complete admin panel.",
     category: "Team Project · Full-Stack Web App",
+    role: "Lead programmer · integrations & UI · 22 of 30 commits",
+    featured: true,
     tech: ["PHP", "MySQL", "JavaScript", "PayPal API", "REST API"],
     github: "https://github.com/pancheeze/motoshapi-final-project-",
     demo: undefined,
@@ -216,11 +220,112 @@ export const projects: Project[] = [
     },
   },
   {
+    slug: "siliscan",
+    name: "SiliScan",
+    description:
+      "An Android app that spots chili leaf diseases (anthracnose, cercospora leaf spot and leaf curl) from a single photo, fully offline, using a CNN trained with transfer learning on MobileNetV2.",
+    category: "Group Project · Mobile + ML",
+    role: "Built the Android app and trained the model",
+    featured: true,
+    tech: ["Kotlin", "Android", "TensorFlow Lite", "Python"],
+    github: "https://github.com/pancheeze/SiliScan",
+    thumbnail: "/images/projects/siliscan-thumb.jpg",
+    detail: {
+      overview:
+        "A PUP group activity that I built solo: I trained the disease-classification model in Python and coded the native Android app in Kotlin. A grower photographs one chili leaf and gets the likely disease, a confidence score, a severity level and a recommendation, all on the phone.",
+      problem:
+        "Chili diseases like anthracnose, cercospora leaf spot and leaf curl are often noticed only after the damage has spread, which cuts the harvest. Many growers also have weak or no internet in the field.",
+      solution:
+        "A convolutional neural network built with transfer learning on MobileNetV2, fine-tuned on chili leaf images and converted to TensorFlow Lite, so every scan runs offline on an Android phone.",
+      features: [
+        "Detects anthracnose, cercospora leaf spot, leaf curl and healthy leaves from one photo",
+        "Runs fully offline with an on-device TensorFlow Lite model",
+        "Camera with a leaf guide overlay, or pick a photo from the gallery",
+        "Review step before analysis to avoid blurry or badly framed photos",
+        "Result with confidence score, severity level and a recommendation",
+        "Scan history and a disease library",
+      ],
+      stack: ["Kotlin", "Android", "TensorFlow Lite", "Python", "TensorFlow / Keras", "MobileNetV2"],
+      process: [
+        "Organized 1,482 chili leaf images into 4 classes (80% training, 20% validation)",
+        "Trained a MobileNetV2 transfer-learning model in Python, then fine-tuned selected layers",
+        "Converted the best model to TensorFlow Lite for on-device use",
+        "Built the Kotlin Android app: camera, review, analysis, results, history and library",
+        "Prepared the technical report and user manual with the group",
+      ],
+      challenges: [
+        "Telling anthracnose apart from cercospora leaf spot, which look alike (anthracnose recall was 0.81, the lowest of the four classes)",
+        "Keeping the model small and fast enough to run offline on Android phones",
+        "Getting clear, well-framed leaf photos in real field conditions",
+      ],
+      gallery: [
+        "/images/projects/siliscan-welcome.jpg",
+        "/images/projects/siliscan-scan.jpg",
+        "/images/projects/siliscan-result.jpg",
+      ],
+      galleryFit: "contain",
+      result:
+        "95.61% validation accuracy and a 96% weighted F1-score across 4 classes (1,482 images), with every scan running offline on the phone. A group activity that I built solo: I trained the model and coded the Android app.",
+    },
+  },
+  {
+    slug: "pancheeze-dev",
+    name: "pancheeze.dev",
+    description:
+      "This portfolio: a Next.js site with Byte, an AI chatbot mascot that answers questions about me, a working contact form, and SEO for my own domain.",
+    category: "Solo · Full-Stack Web",
+    role: "Solo · built with AI-assisted development",
+    featured: true,
+    tech: ["Next.js", "TypeScript", "React", "Tailwind CSS", "Groq AI"],
+    github: "https://github.com/pancheeze/pancheezy",
+    demo: "https://pancheeze.dev",
+    demoLabel: "You're here",
+    thumbnail: "/images/projects/pancheeze-thumb.jpg",
+    detail: {
+      overview:
+        "My personal portfolio, built and deployed on my own domain. Besides showing my projects, it's where I practice full-stack work end to end: server API routes, an AI integration, email delivery, SEO and performance.",
+      problem:
+        "A plain portfolio page doesn't show how I build things. I wanted the site itself to be a project: fast, accessible, easy to update, and with features a recruiter can actually try.",
+      solution:
+        "A Next.js App Router site with all content in one typed data file, server API routes for the contact form and the chatbot, and a terminal-inspired design. Byte, the pixel mascot, answers questions about me with an AI model and falls back to scripted answers when needed.",
+      features: [
+        "Byte: AI chatbot (Groq) that answers in English or Filipino, with a scripted fallback, per-visitor rate limiting and action buttons",
+        "Working contact form: a server route sends email through Gmail with validation, a spam honeypot and rate limiting",
+        "SEO for a custom domain: canonical links, sitemap, link preview card and schema.org structured data",
+        "Lighthouse scores of 100 for accessibility, best practices and SEO; respects reduced-motion settings",
+        "Canvas animations: the ASCII portrait, the glyph background and Byte's physics",
+        "Live GitHub contribution graph",
+      ],
+      stack: ["Next.js 16", "React", "TypeScript", "Tailwind CSS", "Framer Motion", "Groq API", "Nodemailer", "Vercel"],
+      process: [
+        "Kept all content in one data file, so updates don't touch the components",
+        "Added server API routes for the contact form and the chatbot",
+        "Upgraded to Next.js 16 and cleared the security warnings from npm audit",
+        "Connected the pancheeze.dev domain and set up Google Search Console",
+        "Audited it with Lighthouse and fixed contrast, layout and loading issues",
+      ],
+      challenges: [
+        "Keeping the canvas animations smooth on phones (mobile performance is still the weakest score)",
+        "Making the AI chatbot useful but safe: it only talks about me, declines off-topic requests and doesn't invent facts",
+        "Staying within a free AI model's limits, with a fallback when the limit is reached",
+      ],
+      gallery: [
+        "/images/projects/pancheeze-hero.jpg",
+        "/images/projects/pancheeze-byte.jpg",
+        "/images/projects/pancheeze-phone.jpg",
+      ],
+      galleryFit: "contain",
+      result:
+        "Live at pancheeze.dev with Lighthouse scores of 100 for accessibility, best practices and SEO. Built with AI-assisted development: I decided the features, reviewed the changes and tested everything, and I keep improving it.",
+    },
+  },
+  {
     slug: "swish-streak",
     name: "Swish Streak",
     description:
       "A 3D low-poly basketball game on a floating island court: time your shot with the meter, chain makes, and watch your streak multiply your score.",
     category: "3D Game · Unity",
+    role: "Solo · gameplay code written with AI assistance",
     tech: ["Unity 6", "C#", "TextMesh Pro"],
     github: undefined,
     demo: "https://pancheeze.itch.io/swish-streak",
@@ -306,6 +411,53 @@ export const projects: Project[] = [
       gallery: ["/images/projects/mineventory.png"],
       result:
         "A working item catalog built on a live API, and my first real lesson in depending on outside services: when the API went down, I made the app fall back to saved data so it keeps working.",
+    },
+  },
+  {
+    slug: "art-2-cart",
+    name: "Art 2 Cart",
+    description:
+      "A UI/UX prototype for an online marketplace where creators sell digital art, photography, illustrations, templates and 3D models, designed in Figma.",
+    category: "Group Project · UI/UX Design",
+    role: "Co-designed the whole prototype with my group",
+    tech: ["Figma", "UI/UX", "Prototyping"],
+    demo: "https://www.figma.com/design/BlOaDUTQhP7m8uzTudpUuR/prototypeA2C",
+    demoLabel: "View in Figma",
+    thumbnail: "/images/projects/art2cart-thumb.jpg",
+    detail: {
+      overview:
+        "A school project: a full website prototype for Art 2 Cart, a marketplace for digital art and creative assets. I helped my groupmates design the whole thing in Figma, and some of the artwork in the mockups is my own.",
+      problem:
+        "Digital artists need one place to show and sell many kinds of work (art, photos, templates, 3D models), and buyers need to browse it all easily.",
+      solution:
+        "A clean yellow-and-navy marketplace design with a style guide, category browsing, product pages and a creators section, connected into a clickable Figma prototype.",
+      features: [
+        "Style guide: logo, color palette, typography and buttons",
+        "Home page with featured products, top creators and product categories",
+        "Products page grouped by category: digital art, photography, illustrations, templates, 3D models and assets",
+        "Catalogue with search, category filters and pagination",
+        "Product detail and purchase screens",
+        "About page with the mission and vision",
+      ],
+      stack: ["Figma", "Prototyping", "Design system"],
+      process: [
+        "Defined the style guide: colors, typography and components",
+        "Designed the main desktop pages",
+        "Connected the screens into a clickable prototype",
+        "Featured some of my own artwork in the product mockups",
+      ],
+      challenges: [
+        "Keeping one consistent look across very different product types",
+        "Designing product cards that work for art, photos, templates and 3D models alike",
+      ],
+      gallery: [
+        "/images/projects/art2cart-home.jpg",
+        "/images/projects/art2cart-catalogue.jpg",
+        "/images/projects/art2cart-products.jpg",
+      ],
+      galleryFit: "top",
+      result:
+        "A complete, clickable prototype of a digital art marketplace, made as a school group project. It's the design side of my work: I like turning an idea into a clear interface before building it.",
     },
   },
   {
@@ -448,8 +600,8 @@ export const certificates: Certificate[] = [
 
 export const navLinks = [
   { label: "Home", href: "#home" },
-  { label: "Projects", href: "#projects" },
   { label: "About", href: "#about" },
+  { label: "Projects", href: "#projects" },
   { label: "Skills", href: "#skills" },
   { label: "Experience", href: "#journey" },
   { label: "Certificates", href: "#certificates" },

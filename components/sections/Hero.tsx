@@ -153,8 +153,8 @@ export default function Hero() {
 
       <motion.button
         type="button"
-        onClick={() => scrollToSection("#projects")}
-        aria-label="Scroll to Projects section"
+        onClick={() => scrollToSection("#about")}
+        aria-label="Scroll to About section"
         animate={{ y: [0, 8, 0] }}
         transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
         className="absolute bottom-24 left-1/2 z-10 hidden -translate-x-1/2 items-center justify-center rounded-full border border-white/10 bg-base/40 p-2 text-text-secondary backdrop-blur-sm hover:text-white lg:flex sm:bottom-28"

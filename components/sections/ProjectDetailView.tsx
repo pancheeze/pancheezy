@@ -234,7 +234,9 @@ export default function ProjectDetailView({ project }: { project: Project }) {
                 key={`${image}-${i}`}
                 variants={fadeUp}
                 whileHover={{ scale: 1.03 }}
-                className="relative aspect-[4/3] overflow-hidden rounded-2xl border border-white/10"
+                className={`relative aspect-[4/3] overflow-hidden rounded-2xl border border-white/10 ${
+                  project.detail.galleryFit === "contain" ? "bg-surface" : ""
+                }`}
               >
                 {/* Opens the full-size image, so detailed shots stay readable. */}
                 <a
@@ -250,7 +252,13 @@ export default function ProjectDetailView({ project }: { project: Project }) {
                     alt={`${project.name} screenshot ${i + 1}`}
                     fill
                     sizes="(max-width: 768px) 100vw, 33vw"
-                    className="object-cover transition-transform duration-500 hover:scale-110"
+                    className={`transition-transform duration-500 hover:scale-110 ${
+                      project.detail.galleryFit === "contain"
+                        ? "object-contain p-2"
+                        : project.detail.galleryFit === "top"
+                          ? "object-cover object-top"
+                          : "object-cover"
+                    }`}
                   />
                 </a>
               </motion.div>

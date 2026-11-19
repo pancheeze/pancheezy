@@ -36,6 +36,12 @@ export default function ProjectCard({ project, index }: { project: Project; inde
             {project.name}
           </h3>
         </Link>
+        {project.role && (
+          <p className="mt-1 font-mono text-xs text-secondary">
+            <span className="text-text-muted">my role: </span>
+            {project.role}
+          </p>
+        )}
         <p className="mt-2 flex-1 text-sm leading-relaxed text-text-secondary">
           {project.description}
         </p>
