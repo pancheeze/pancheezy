@@ -426,7 +426,7 @@ export const projects: Project[] = [
     description:
       "A UI/UX prototype for an online marketplace where creators sell digital art, photography, illustrations, templates and 3D models, designed in Figma.",
     category: "Group Project · UI/UX Design",
-    folder: "group_projects",
+    folder: "ui_ux_design",
     role: "Co-designed the whole prototype with my group",
     tech: ["Figma", "UI/UX", "Prototyping"],
     demo: "https://www.figma.com/design/BlOaDUTQhP7m8uzTudpUuR/prototypeA2C",

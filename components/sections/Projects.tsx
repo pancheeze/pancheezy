@@ -24,6 +24,7 @@ export default function Projects({ activity }: { activity?: ContributionCalendar
           description="Projects I led or built end to end: what I did, the hard parts, and the results."
         />
 
+        <h3 className="mb-5 font-mono text-sm uppercase tracking-[0.2em] text-text-secondary">Featured projects</h3>
         <motion.div
           variants={staggerContainer(0.15)}
           initial="hidden"

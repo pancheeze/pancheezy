@@ -229,6 +229,29 @@ body::-webkit-scrollbar {
   .folder-back { transition: none; }
 }
 
+/* Compact "file" cards inside an opened folder: lift, accent border and a sliding arrow on hover. */
+.file-card {
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.25s ease, box-shadow 0.25s ease;
+}
+.file-card:hover,
+.file-card:focus-visible {
+  transform: translateY(-3px);
+  border-color: var(--folder-accent);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
+}
+.file-card-arrow {
+  transition: transform 0.25s ease, color 0.25s ease;
+}
+.file-card:hover .file-card-arrow,
+.file-card:focus-visible .file-card-arrow {
+  transform: translateX(4px);
+  color: var(--folder-accent);
+}
+@media (prefers-reduced-motion: reduce) {
+  .file-card,
+  .file-card-arrow { transition: none; }
+}
+
 /* ---------- Byte, the wandering pixel mascot (components/byte) ---------- */
 /* Chat icon (a pixel terminal): the "_" cursor blinks, faster while Byte is answering. */
 .byte-cursor {
