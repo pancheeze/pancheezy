@@ -4,7 +4,7 @@ import { useCallback, useEffect, useId, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowRight, ChevronDown, Folder as FolderIcon, FolderOpen } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { Project } from "@/lib/types";
 import { fadeUp, staggerContainer } from "@/lib/utils";
 
@@ -100,13 +100,14 @@ function Folder({
           <div className="folder-front" />
         </div>
 
-        <p className="mt-3 truncate font-mono text-sm text-white transition-colors group-hover:text-[color:var(--folder-accent)]">
-          <span className="text-text-muted">&gt; </span>
+        <p className="mt-2 truncate font-mono text-[12px] text-white transition-colors group-hover:text-[color:var(--folder-accent)] sm:mt-3 sm:text-sm">
+          <span className="hidden text-text-muted sm:inline">&gt; </span>
           <span aria-hidden>{shown}</span>
           <span className="sr-only">{name.replace(/_/g, " ")} folder</span>
         </p>
-        <p className="mt-0.5 text-xs text-text-secondary">
-          {items.length} {items.length === 1 ? "project" : "projects"} · {open ? "close folder" : "open folder"}
+        <p className="mt-0.5 text-[11px] text-text-secondary sm:text-xs">
+          {items.length} {items.length === 1 ? "project" : "projects"}
+          <span className="hidden sm:inline"> · {open ? "close folder" : "open folder"}</span>
         </p>
       </button>
     </motion.li>
@@ -157,93 +158,6 @@ function FileCard({ project, accent }: { project: Project; accent: string }) {
   );
 }
 
-/** Phones: a compact folder row; its projects expand right underneath it (like a file explorer). */
-function FolderRow({
-  name,
-  accent,
-  items,
-  open,
-  panelId,
-  onToggle,
-}: {
-  name: string;
-  accent: string;
-  items: Project[];
-  open: boolean;
-  panelId: string;
-  onToggle: () => void;
-}) {
-  const [shown, decrypt] = useDecrypt(`${name}/`);
-  const Icon = open ? FolderOpen : FolderIcon;
-  return (
-    <motion.li variants={fadeUp}>
-      <button
-        type="button"
-        onClick={() => {
-          onToggle();
-          decrypt();
-        }}
-        aria-expanded={open}
-        aria-controls={panelId}
-        className="glass-card flex w-full items-center gap-3 p-3 text-left transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-        style={open ? { borderColor: accent } : undefined}
-      >
-        <span
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl"
-          style={{ backgroundColor: `${accent}1f`, color: accent }}
-          aria-hidden
-        >
-          <Icon size={20} />
-        </span>
-        <span className="min-w-0 flex-1">
-          <span className="block truncate font-mono text-sm text-white">
-            <span className="text-text-muted">&gt; </span>
-            <span aria-hidden>{shown}</span>
-            <span className="sr-only">{name.replace(/_/g, " ")} folder</span>
-          </span>
-          <span className="block text-xs text-text-secondary">
-            {items.length} {items.length === 1 ? "project" : "projects"}
-          </span>
-        </span>
-        <ChevronDown
-          size={18}
-          className={`shrink-0 text-text-secondary transition-transform duration-300 ${open ? "rotate-180" : ""}`}
-          aria-hidden
-        />
-      </button>
-
-      <AnimatePresence initial={false}>
-        {open && (
-          <motion.div
-            id={panelId}
-            role="region"
-            aria-label={`${name.replace(/_/g, " ")} projects`}
-            data-folder-panel
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-            className="overflow-hidden"
-          >
-            {/* A thin "tree" line in the folder's color connects the files to their folder. */}
-            <motion.ul
-              variants={staggerContainer(0.08)}
-              initial="hidden"
-              animate="show"
-              className="ml-5 mt-3 space-y-3 border-l pb-1 pl-4"
-              style={{ borderColor: `${accent}59` }}
-            >
-              {items.map((p) => (
-                <FileCard key={p.slug} project={p} accent={accent} />
-              ))}
-            </motion.ul>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </motion.li>
-  );
-}
-
 export default function ProjectFolders({ projects }: { projects: Project[] }) {
   const [openKey, setOpenKey] = useState<string | null>(null);
   const baseId = useId();
@@ -259,7 +173,7 @@ export default function ProjectFolders({ projects }: { projects: Project[] }) {
     if (!openKey) return;
     const t = setTimeout(() => {
       const first = [...(sectionRef.current?.querySelectorAll<HTMLElement>("[data-folder-panel] .file-card") ?? [])].find(
-        (el) => el.offsetParent !== null // the visible layout (phone rows or desktop grid)
+        (el) => el.offsetParent !== null
       );
       if (!first) return;
       const overflow = first.getBoundingClientRect().bottom - (window.innerHeight - 24);
@@ -285,24 +199,8 @@ export default function ProjectFolders({ projects }: { projects: Project[] }) {
 
   return (
     <div ref={sectionRef}>
-      {/* Phones: compact rows that expand in place. */}
-      <ul className="space-y-3 sm:hidden">
-        {folders.map((f) => (
-          <FolderRow
-            key={f.key}
-            name={f.key}
-            accent={f.accent}
-            items={f.items}
-            open={openKey === f.key}
-            panelId={`${baseId}-m-${f.key}`}
-            onToggle={() => toggle(f.key)}
-          />
-        ))}
-      </ul>
-
-      {/* Tablets and desktop: glass folders in a row, contents underneath. */}
-      <div className="hidden sm:block">
-      <ul className="mx-auto grid max-w-3xl grid-cols-3 gap-x-6 gap-y-8">
+      {/* Glass folders in a row (smaller on phones), the open one's contents underneath. */}
+      <ul className="mx-auto grid max-w-3xl grid-cols-3 gap-x-3 sm:gap-x-6">
         {folders.map((f) => (
           <Folder
             key={f.key}
@@ -330,7 +228,7 @@ export default function ProjectFolders({ projects }: { projects: Project[] }) {
             transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
             className="overflow-hidden"
           >
-            <p className="mb-4 mt-8 font-mono text-xs text-text-secondary">
+            <p className="mb-3 mt-6 font-mono text-xs text-text-secondary sm:mb-4 sm:mt-8">
               <span style={{ color: openFolder.accent }}>~/projects/{openFolder.key}/</span>
             </p>
             {/* Compact "file" cards: small on purpose (featured projects are the big ones). */}
@@ -347,7 +245,6 @@ export default function ProjectFolders({ projects }: { projects: Project[] }) {
           </motion.div>
         )}
       </AnimatePresence>
-      </div>
     </div>
   );
 }

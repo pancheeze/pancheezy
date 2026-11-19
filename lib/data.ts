@@ -95,16 +95,19 @@ export const skills: Skill[] = [
   { name: "Bootstrap", category: "Frontend" },
   { name: "React", category: "Frontend" },
   { name: "Next.js", category: "Frontend" },
+  { name: "Tailwind CSS", category: "Frontend" },
   { name: "PHP", category: "Backend" },
   { name: "REST APIs", category: "Backend" },
   { name: "MySQL", category: "Database" },
   { name: "Flutter", category: "Mobile" },
   { name: "Dart", category: "Mobile" },
+  { name: "Kotlin", category: "Mobile" },
   { name: "TensorFlow Lite", category: "AI" },
   { name: "Git", category: "Tools" },
   { name: "GitHub", category: "Tools" },
   { name: "Unity", category: "Tools" },
   { name: "Photoshop", category: "Tools" },
+  { name: "Figma", category: "Tools" },
 ];
 
 // Each entry becomes a filter tab.

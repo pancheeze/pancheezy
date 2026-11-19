@@ -240,6 +240,109 @@ body::-webkit-scrollbar {
   will-change: transform, opacity;
 }
 
+/* Skills bento (components/sections/Skills.tsx): category cards with skill chips. */
+.skill-card {
+  transition: border-color 0.3s ease, transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.skill-card:hover {
+  border-color: color-mix(in srgb, var(--folder-accent) 55%, transparent);
+}
+.skill-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border-radius: 9999px;
+  border: 1px solid;
+  padding: 0.3rem 0.65rem;
+  font-size: 0.75rem;
+  line-height: 1.1;
+  transition: border-color 0.2s ease, background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+}
+.skill-chip:focus { outline: none; }
+.skill-chip:focus-visible { box-shadow: 0 0 0 2px var(--folder-accent); }
+/* Backed by a project: lit in the card's color. */
+.skill-chip.is-used {
+  color: #E9E6DF;
+  border-color: color-mix(in srgb, var(--folder-accent) 40%, transparent);
+  background: color-mix(in srgb, var(--folder-accent) 10%, transparent);
+}
+.skill-chip.is-used svg { color: var(--folder-accent); }
+/* Coursework only: dim and dashed. */
+.skill-chip.is-coursework {
+  color: #98A2AB;
+  border-color: rgba(233, 230, 223, 0.14);
+  border-style: dashed;
+  background: transparent;
+}
+.skill-chip.is-active,
+.skill-chip:hover {
+  border-color: var(--folder-accent);
+  box-shadow: 0 0 14px color-mix(in srgb, var(--folder-accent) 35%, transparent);
+}
+/* Cursor spotlight (laptop): a soft glow in the card's color that follows the mouse. */
+.skill-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  background: radial-gradient(260px circle at var(--mx, 50%) var(--my, 50%),
+    color-mix(in srgb, var(--folder-accent) 14%, transparent), transparent 70%);
+}
+@media (hover: hover) and (pointer: fine) {
+  .skill-card:hover::before { opacity: 1; }
+}
+
+/* Logo strip above the skills bento: slow, dim, edges faded out. */
+.strip-row {
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
+}
+.strip-track {
+  display: flex;
+  width: max-content;
+  gap: 0.75rem;
+  animation: strip-scroll 60s linear infinite;
+}
+.strip-track.is-reverse { animation-direction: reverse; animation-duration: 70s; }
+.skill-strip:hover .strip-track,
+.skill-strip[data-paused="true"] .strip-track { animation-play-state: paused; }
+@keyframes strip-scroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(calc(-50% - 0.375rem)); } /* half the list + half a gap = seamless */
+}
+.strip-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-shrink: 0;
+  padding: 0.35rem 0.75rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(233, 230, 223, 0.08);
+  background: rgba(233, 230, 223, 0.02);
+  color: #6F7A84;
+  font-family: var(--font-mono, ui-monospace), monospace;
+  font-size: 0.75rem;
+  transition: color 0.25s ease, border-color 0.25s ease;
+}
+.strip-item:hover { color: #E9E6DF; border-color: rgba(233, 230, 223, 0.22); }
+/* The occasional glitch: a quick jitter with a split-color flicker. */
+.strip-item.is-glitch { animation: strip-glitch 0.45s steps(2, end); color: #E9E6DF; }
+@keyframes strip-glitch {
+  0% { transform: translate(0); text-shadow: none; }
+  20% { transform: translate(-2px, 1px); text-shadow: 2px 0 #ECA35F, -2px 0 #7AA5C4; }
+  40% { transform: translate(2px, -1px); text-shadow: -2px 0 #ECA35F, 2px 0 #7FA88B; }
+  60% { transform: translate(-1px, 0); opacity: 0.6; }
+  80% { transform: translate(1px, 1px); text-shadow: 1px 0 #7AA5C4; }
+  100% { transform: translate(0); text-shadow: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .strip-track { animation: none; }
+  .strip-item.is-glitch { animation: none; }
+}
+
 /* Compact "file" cards inside an opened folder: lift, accent border and a sliding arrow on hover. */
 .file-card {
   transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.25s ease, box-shadow 0.25s ease;

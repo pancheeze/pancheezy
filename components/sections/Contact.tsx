@@ -2,7 +2,7 @@
 
 import { useState, FormEvent } from "react";
 import { motion } from "framer-motion";
-import { Mail, Github, Linkedin, Facebook, Send, CheckCircle2 } from "lucide-react";
+import { Mail, Github, Linkedin, Facebook, Send, CheckCircle2, Copy, Check } from "lucide-react";
 import SectionHeading from "@/components/ui/SectionHeading";
 import { profile } from "@/lib/data";
 import { fadeUp, staggerContainer } from "@/lib/utils";
@@ -44,11 +44,22 @@ export default function Contact() {
     }
   };
 
+  const [copied, setCopied] = useState(false);
+  const copyEmail = async () => {
+    try {
+      await navigator.clipboard.writeText(profile.email);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    } catch {
+      window.location.href = `mailto:${profile.email}`; // clipboard blocked: open the mail app instead
+    }
+  };
+
   const contactLinks = [
-    { icon: Mail, label: "Email", value: profile.email, href: `mailto:${profile.email}` },
-    { icon: Github, label: "GitHub", value: profile.githubHandle, href: profile.github },
-    { icon: Linkedin, label: "LinkedIn", value: profile.name, href: profile.linkedin },
-    { icon: Facebook, label: "Facebook", value: profile.name, href: profile.facebook },
+    { icon: Mail, label: "Email", href: `mailto:${profile.email}` },
+    { icon: Github, label: "GitHub", href: profile.github },
+    { icon: Linkedin, label: "LinkedIn", href: profile.linkedin },
+    { icon: Facebook, label: "Facebook", href: profile.facebook },
   ];
 
   const fields = [
@@ -65,34 +76,50 @@ export default function Contact() {
           description={profile.contactIntro}
         />
 
-        <div className="grid grid-cols-1 gap-10 lg:grid-cols-5 lg:gap-16">
+        <div className="mx-auto flex max-w-3xl flex-col gap-6">
+          {/* Links as one compact row (icon-only on phones), then the email in plain text with a copy button. */}
           <motion.div
             initial="hidden"
             whileInView="show"
             viewport={{ once: true, amount: 0.3 }}
-            variants={staggerContainer(0.12)}
-            className="flex flex-col gap-4 lg:col-span-2"
+            variants={staggerContainer(0.08)}
           >
-            {contactLinks.map(({ icon: Icon, label, value, href }) => (
-              <motion.a
-                key={label}
-                href={href}
-                target={href.startsWith("http") ? "_blank" : undefined}
-                rel={href.startsWith("http") ? "noreferrer" : undefined}
-                variants={fadeUp}
-                whileHover={{ y: -4, x: 2 }}
-                className="glass-card flex items-center gap-4 p-5"
+            <div className="grid grid-cols-4 gap-2 sm:gap-3">
+              {contactLinks.map(({ icon: Icon, label, href }) => (
+                <motion.a
+                  key={label}
+                  href={href}
+                  target={href.startsWith("http") ? "_blank" : undefined}
+                  rel={href.startsWith("http") ? "noreferrer" : undefined}
+                  variants={fadeUp}
+                  whileHover={{ y: -3 }}
+                  aria-label={label}
+                  title={label}
+                  className="glass-card flex h-11 items-center justify-center gap-2 text-text-secondary hover:text-white"
+                >
+                  <Icon size={17} className="text-primary" aria-hidden />
+                  <span className="hidden text-sm font-medium sm:inline">{label}</span>
+                </motion.a>
+              ))}
+            </div>
+            <motion.p
+              variants={fadeUp}
+              className="mt-3 flex items-center justify-center gap-1.5 text-center text-xs text-text-secondary"
+            >
+              <span className="hidden shrink-0 sm:inline">or email me directly:</span>
+              <a href={`mailto:${profile.email}`} className="min-w-0 truncate text-white hover:text-primary">
+                {profile.email}
+              </a>
+              <button
+                type="button"
+                onClick={copyEmail}
+                aria-label={copied ? "Email copied" : "Copy email address"}
+                title={copied ? "Copied!" : "Copy"}
+                className="shrink-0 rounded-md p-1.5 text-text-secondary transition-colors hover:bg-white/5 hover:text-primary"
               >
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary">
-                  <Icon size={18} />
-                </span>
-                <span className="min-w-0">
-                  <span className="block text-xs text-text-secondary">{label}</span>
-                  {/* break-all lets the long email wrap instead of overflowing on phones */}
-                  <span className="block break-all text-sm font-medium text-white">{value}</span>
-                </span>
-              </motion.a>
-            ))}
+                {copied ? <Check size={14} className="text-secondary" /> : <Copy size={14} />}
+              </button>
+            </motion.p>
           </motion.div>
 
           <motion.form
@@ -102,7 +129,7 @@ export default function Contact() {
             variants={staggerContainer(0.1)}
             onSubmit={handleSubmit}
             autoComplete="off"
-            className="glass-card flex flex-col gap-5 p-6 sm:p-8 lg:col-span-3"
+            className="glass-card flex flex-col gap-5 p-6 sm:p-8"
           >
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
               {fields.map((field) => (
