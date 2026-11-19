@@ -53,10 +53,19 @@ export const profile = {
   // so he says he doesn't know instead of guessing.
   faq: [
     ["When does he graduate?", "He expects to finish his BS Information Technology in 2027."],
-    ["When is he available for OJT / internship, and for how many hours?", ""],
-    ["Does he prefer onsite, remote or hybrid work? Where can he work onsite?", ""],
-    ["What roles is he looking for?", ""],
-    ["What languages does he speak?", ""],
+    [
+      "What OJT / internship does he need?",
+      "A 500-hour OJT/internship for his BS Information Technology degree, with a company that can sign a MOA (Memorandum of Agreement) with his university. It will likely start around January 2027 (to be confirmed).",
+    ],
+    [
+      "Does he prefer onsite, remote or hybrid work? Where can he work onsite?",
+      "Onsite, in Batangas, Laguna or Metro Manila.",
+    ],
+    [
+      "What roles is he looking for?",
+      "Full-stack web development (frontend and backend) and mobile app development. He can also help with UI design.",
+    ],
+    ["What languages does he speak?", "Filipino (native) and English (conversational)."],
   ] as [string, string][],
   interests: [
     "Full-Stack Web Development",
