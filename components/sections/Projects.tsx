@@ -99,7 +99,9 @@ function FeaturedProjects() {
         role="region"
         aria-roledescription="carousel"
         aria-label="Featured projects"
-        className="featured-track -mx-6 flex snap-x snap-mandatory scroll-px-6 gap-4 overflow-x-auto px-6 pb-2 sm:-mx-8 sm:scroll-px-8 sm:px-8 md:mx-0 md:grid md:grid-cols-2 md:gap-6 md:overflow-visible md:px-0 md:pb-0"
+        // -my-10/py-10: a scrolling row clips vertically too, so this gives the cards' glow and hover
+        // lift room above and below without changing the layout.
+        className="featured-track -mx-6 -my-10 flex snap-x snap-mandatory scroll-px-6 gap-4 overflow-x-auto px-6 py-10 sm:-mx-8 sm:scroll-px-8 sm:px-8 md:m-0 md:grid md:grid-cols-2 md:gap-6 md:overflow-visible md:p-0"
       >
         {featured.map((project, i) => (
           <div
