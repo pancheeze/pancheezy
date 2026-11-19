@@ -279,6 +279,26 @@ body::-webkit-scrollbar {
   border-color: var(--folder-accent);
   box-shadow: 0 0 14px color-mix(in srgb, var(--folder-accent) 35%, transparent);
 }
+/* Phone skills carousel: chips pop in again each time a card reaches the center; the active
+   dot fills up until the next auto-advance. */
+.skill-slide { will-change: transform, opacity; }
+.skill-slide[data-active="true"] .skill-chip {
+  animation: chip-pop 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: calc(var(--i, 0) * 45ms + 0.1s);
+}
+@keyframes chip-pop {
+  from { opacity: 0.2; transform: scale(0.85); }
+  to { opacity: 1; transform: scale(1); }
+}
+.skill-progress { animation: skill-progress linear forwards; }
+@keyframes skill-progress {
+  from { width: 0%; }
+  to { width: 100%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .skill-slide[data-active="true"] .skill-chip { animation: none; }
+  .skill-progress { animation: none; width: 100%; }
+}
 /* Cursor spotlight (laptop): a soft glow in the card's color that follows the mouse. */
 .skill-card::before {
   content: "";
