@@ -229,6 +229,17 @@ body::-webkit-scrollbar {
   .folder-back { transition: none; }
 }
 
+/* Featured projects swipe carousel (phones only; a grid from md up). */
+.featured-track {
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.featured-track::-webkit-scrollbar { display: none; }
+/* Size, tilt and opacity of each slide follow the swipe (set by JS in Projects.tsx). */
+.featured-slide {
+  will-change: transform, opacity;
+}
+
 /* Compact "file" cards inside an opened folder: lift, accent border and a sliding arrow on hover. */
 .file-card {
   transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.25s ease, box-shadow 0.25s ease;
