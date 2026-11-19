@@ -59,7 +59,7 @@ export const profile = {
     ],
     [
       "Does he prefer onsite, remote or hybrid work? Where can he work onsite?",
-      "Onsite, in Batangas, Laguna or Metro Manila.",
+      "He is aiming for an onsite OJT/internship in Batangas, Laguna or Metro Manila. He hasn't said he's looking for remote work, so for remote or hybrid offers, contact him directly.",
     ],
     [
       "What roles is he looking for?",
