@@ -1,16 +1,16 @@
 "use client";
 
 import { useCallback, useEffect, useId, useRef, useState } from "react";
-import Link from "next/link";
 import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";
+import ProjectCard from "@/components/ui/ProjectCard";
 import { Project } from "@/lib/types";
-import { fadeUp } from "@/lib/utils";
+import { fadeUp, staggerContainer } from "@/lib/utils";
 
 // "More projects" as folders by type of work (game_dev/, websites/, group_projects/).
 // Each folder is transparent glass with the projects' screenshots inside as "documents":
 // hover/focus makes them peek up a little and the folder name decrypts from glyphs;
-// clicking opens the folder and lists its projects underneath.
+// clicking opens the folder and shows its projects underneath as full project cards.
 
 const GLYPHS = "!<>-_\\/[]{}=+*^?#%&$@01";
 const STEP_MS = 32;
@@ -112,29 +112,6 @@ function Folder({
   );
 }
 
-function Document({ project }: { project: Project }) {
-  const [shown, decrypt] = useDecrypt(project.name);
-  return (
-    <Link
-      href={`/projects/${project.slug}`}
-      onMouseEnter={decrypt}
-      onFocus={decrypt}
-      className="glass-card group flex items-center gap-3 p-3 transition-colors hover:border-primary/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-    >
-      <span className="relative h-14 w-20 shrink-0 overflow-hidden rounded-md border border-white/10">
-        <Image src={project.thumbnail} alt="" fill sizes="80px" className="object-cover object-top" />
-      </span>
-      <span className="min-w-0">
-        <span className="block truncate font-medium text-white transition-colors group-hover:text-primary">
-          <span aria-hidden>{shown}</span>
-          <span className="sr-only">{project.name}</span>
-        </span>
-        <span className="block truncate text-xs text-text-secondary">{project.category}</span>
-      </span>
-    </Link>
-  );
-}
-
 export default function ProjectFolders({ projects }: { projects: Project[] }) {
   const [openKey, setOpenKey] = useState<string | null>(null);
   const baseId = useId();
@@ -170,16 +147,22 @@ export default function ProjectFolders({ projects }: { projects: Project[] }) {
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-            className="mx-auto max-w-3xl overflow-hidden"
+            className="overflow-hidden"
           >
-            <p className="mb-3 mt-8 font-mono text-xs text-text-secondary">
+            <p className="mb-4 mt-8 font-mono text-xs text-text-secondary">
               <span style={{ color: openFolder.accent }}>~/projects/{openFolder.key}/</span>
             </p>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              {openFolder.items.map((p) => (
-                <Document key={p.slug} project={p} />
+            {/* The same full cards as the featured projects: screenshot, description, tech, links. */}
+            <motion.div
+              variants={staggerContainer(0.12)}
+              initial="hidden"
+              animate="show"
+              className="grid grid-cols-1 gap-6 pb-2 md:grid-cols-2"
+            >
+              {openFolder.items.map((p, i) => (
+                <ProjectCard key={p.slug} project={p} index={i} />
               ))}
-            </div>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
