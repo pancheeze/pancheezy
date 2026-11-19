@@ -24,7 +24,7 @@ export const profile = {
   university: "Polytechnic University of the Philippines – Sto. Tomas Campus",
   universityShort: "PUP",
   degree: "BS Information Technology",
-  location: "Philippines",
+  location: "Batangas, Philippines",
   // Empty fields are hidden on the site until they are filled in.
   start: "2023 – Present",
   background: "Tanauan Institute",
@@ -34,8 +34,13 @@ export const profile = {
   githubHandle: "@pancheeze",
   linkedin: "https://www.linkedin.com/in/paul-pancho-76b8103a5/",
   facebook: "https://www.facebook.com/paulpancho.21",
-  // Status pill above the hero heading; set to "" to hide it.
+  // General availability (Byte uses this sentence too).
   availability: "Open to internships & collaborations",
+  // Status pill above the hero heading (falls back to `availability`); set both to "" to hide it.
+  heroBadge: "Looking for a 500-hour OJT · Jan 2027",
+  // Contact section intro: what he's looking for. Update it when the OJT details change.
+  contactIntro:
+    "I'm looking for a 500-hour onsite OJT in Batangas, Laguna or Metro Manila, starting around January 2027. If your company can sign a MOA with my university, I'd love to hear from you. I'm also happy to talk about projects and collaborations.",
   // Put the PDF in public/cv/ and set the path here; the Download CV button only shows when set.
   cvUrl: "/cv/Paul-Anthony-Pancho-CV.pdf",
   heroDescription:

@@ -113,7 +113,7 @@ export default function About() {
                   <MapPin size={20} />
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-white">Based in the {profile.location}</p>
+                  <p className="text-sm font-semibold text-white">Based in {profile.location}</p>
                   <p className="text-xs text-text-secondary">Open to collaborating on code projects</p>
                 </div>
               </div>

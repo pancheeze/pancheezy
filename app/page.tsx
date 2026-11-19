@@ -37,7 +37,7 @@ const structuredData = {
         startDate: "2025",
         memberOf: { "@type": "Organization", name: "The Searcher", description: "PUP student publication" },
       },
-      address: { "@type": "PostalAddress", addressCountry: "PH" },
+      address: { "@type": "PostalAddress", addressRegion: "Batangas", addressCountry: "PH" },
       knowsAbout: [...skills.map((s) => s.name), "Digital Illustration", "Traditional Illustration"],
       sameAs: [profile.github, profile.linkedin, profile.facebook, "https://pancheeze.itch.io"],
     },

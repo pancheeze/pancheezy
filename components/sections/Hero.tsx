@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Download, Facebook, Github, Linkedin, Mail, ArrowDown } from "lucide-react";
+import { Download, Facebook, Github, Linkedin, Mail, MapPin, ArrowDown } from "lucide-react";
 import LanyardCard from "@/components/ui/LanyardCard";
 import DecryptText from "@/components/ui/DecryptText";
 import { profile } from "@/lib/data";
@@ -33,21 +33,17 @@ export default function Hero() {
             animate="show"
             className="w-full max-w-xl"
           >
-            {profile.availability && (
+            {(profile.heroBadge || profile.availability) && (
               <motion.div variants={heroItem} className="mb-5">
                 <span className="inline-flex items-center gap-2 rounded-full border border-secondary/30 bg-secondary/10 px-3 py-1 text-xs font-medium text-secondary">
                   <span className="relative flex h-2 w-2" aria-hidden>
                     <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-secondary opacity-60 motion-reduce:animate-none" />
                     <span className="relative inline-flex h-2 w-2 rounded-full bg-secondary" />
                   </span>
-                  {profile.availability}
+                  {profile.heroBadge || profile.availability}
                 </span>
               </motion.div>
             )}
-
-            <motion.span variants={heroItem} className="eyebrow mb-5">
-              Welcome to my portfolio
-            </motion.span>
 
             <motion.h1
               variants={heroItem}
@@ -76,6 +72,14 @@ export default function Hero() {
               style={{ color: '#E9E6DF' }}
             >
               {profile.heroDescription}
+            </motion.p>
+
+            <motion.p
+              variants={heroItem}
+              className="mt-4 flex items-center justify-center gap-1.5 text-sm text-text-secondary lg:justify-start"
+            >
+              <MapPin size={16} className="shrink-0" aria-hidden />
+              {profile.location}
             </motion.p>
 
             {/* One clear main action (see the work), one secondary (CV), then small profile links

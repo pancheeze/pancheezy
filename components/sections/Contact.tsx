@@ -62,7 +62,7 @@ export default function Contact() {
         <SectionHeading
           eyebrow="Let's connect"
           title="Contact Me"
-          description="Want to team up on a project or just say hi? My inbox is open."
+          description={profile.contactIntro}
         />
 
         <div className="grid grid-cols-1 gap-10 lg:grid-cols-5 lg:gap-16">
@@ -155,7 +155,7 @@ export default function Contact() {
                 required
                 maxLength={5000}
                 rows={5}
-                placeholder="Tell me about your project or idea..."
+                placeholder="Tell me about the OJT opportunity, a project, or just say hi..."
                 onFocus={() => setFocused("message")}
                 onBlur={() => setFocused(null)}
                 animate={{
