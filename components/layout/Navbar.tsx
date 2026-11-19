@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Menu, X } from "lucide-react";
 import { navLinks } from "@/lib/data";
 import { scrollToSection, cn } from "@/lib/utils";
@@ -12,6 +12,7 @@ export default function Navbar() {
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState("#home");
   const pathname = usePathname();
+  const router = useRouter();
   // Section to scroll to once the mobile menu has finished closing.
   const pendingScroll = useRef<string | null>(null);
 
@@ -39,11 +40,13 @@ export default function Navbar() {
       }
 
       if (window.location.hash) {
-        // Follow a link like "/#projects". On a reload, keep the position the browser restored.
+        // Follow a link like "/#projects". On a reload of the homepage itself, keep the position
+        // the browser restored (coming from another page in the site still scrolls).
         const nav = performance.getEntriesByType("navigation")[0] as
           | PerformanceNavigationTiming
           | undefined;
-        if (nav?.type !== "reload") {
+        const reloadedHome = nav?.type === "reload" && new URL(nav.name).pathname === "/";
+        if (!reloadedHome) {
           document.querySelector(window.location.hash)?.scrollIntoView({ behavior: "smooth" });
         }
         // Drop the hash so a later reload doesn't jump back to that section.
@@ -74,7 +77,9 @@ export default function Navbar() {
 
   const handleNavClick = useCallback((href: string) => {
     if (pathname !== "/") {
-      window.location.href = `/${href}`;
+      // In-site navigation (no full reload), so the intro screen doesn't replay.
+      setOpen(false);
+      router.push(`/${href}`);
       return;
     }
     if (open) {
@@ -84,7 +89,7 @@ export default function Navbar() {
       return;
     }
     scrollToSection(href);
-  }, [pathname, open]);
+  }, [pathname, open, router]);
 
   return (
     <motion.header
