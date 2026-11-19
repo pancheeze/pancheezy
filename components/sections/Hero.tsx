@@ -78,71 +78,71 @@ export default function Hero() {
               {profile.heroDescription}
             </motion.p>
 
+            {/* One clear main action (see the work), one secondary (CV), then small profile links
+                (Facebook included: many PH recruiters and OJT coordinators reach out on Messenger). */}
             <motion.div
               variants={heroItem}
               className="mt-9 flex flex-wrap items-center justify-center gap-3 lg:justify-start"
             >
-            {/* Only shown once a CV file is set in lib/data.ts. */}
-            {profile.cvUrl && (
-              <motion.a
-                href={profile.cvUrl}
-                download
+              <motion.button
+                type="button"
+                onClick={() => scrollToSection("#projects")}
                 whileHover={{ scale: 1.04, y: -2 }}
                 whileTap={{ scale: 0.96 }}
                 className="btn-primary"
               >
-                <Download size={16} />
-                Download CV
-              </motion.a>
-            )}
+                View projects
+                <ArrowDown size={16} />
+              </motion.button>
 
-            <motion.a
-              href={profile.github}
-              target="_blank"
-              rel="noreferrer"
-              whileHover={{ scale: 1.04, y: -2 }}
-              whileTap={{ scale: 0.96 }}
-              className="btn-ghost"
-            >
-              <Github size={16} />
-              GitHub
-            </motion.a>
+              {/* Only shown once a CV file is set in lib/data.ts. */}
+              {profile.cvUrl && (
+                <motion.a
+                  href={profile.cvUrl}
+                  download
+                  whileHover={{ scale: 1.04, y: -2 }}
+                  whileTap={{ scale: 0.96 }}
+                  className="btn-ghost"
+                >
+                  <Download size={16} />
+                  Download CV
+                </motion.a>
+              )}
+            </motion.div>
 
-            <motion.a
-              href={profile.linkedin}
-              target="_blank"
-              rel="noreferrer"
-              whileHover={{ scale: 1.04, y: -2 }}
-              whileTap={{ scale: 0.96 }}
-              className="btn-ghost"
+            <motion.div
+              variants={heroItem}
+              className="mt-5 flex items-center justify-center gap-3 lg:justify-start"
             >
-              <Linkedin size={16} />
-              LinkedIn
-            </motion.a>
-
-            <motion.a
-              href={profile.facebook}
-              target="_blank"
-              rel="noreferrer"
-              whileHover={{ scale: 1.04, y: -2 }}
-              whileTap={{ scale: 0.96 }}
-              className="btn-ghost"
-            >
-              <Facebook size={16} />
-              Facebook
-            </motion.a>
-
-            <motion.button
-              type="button"
-              onClick={() => scrollToSection("#contact")}
-              whileHover={{ scale: 1.04, y: -2 }}
-              whileTap={{ scale: 0.96 }}
-              className="btn-ghost"
-            >
-              <Mail size={16} />
-              Contact Me
-            </motion.button>
-          </motion.div>
+              {[
+                { href: profile.github, label: "GitHub profile", Icon: Github, external: true },
+                { href: profile.linkedin, label: "LinkedIn profile", Icon: Linkedin, external: true },
+                { href: profile.facebook, label: "Facebook profile", Icon: Facebook, external: true },
+                { href: "#contact", label: "Contact me", Icon: Mail, external: false },
+              ].map(({ href, label, Icon, external }) => (
+                <motion.a
+                  key={label}
+                  href={href}
+                  target={external ? "_blank" : undefined}
+                  rel={external ? "noreferrer" : undefined}
+                  onClick={
+                    external
+                      ? undefined
+                      : (e) => {
+                          e.preventDefault();
+                          scrollToSection(href);
+                        }
+                  }
+                  aria-label={label}
+                  title={label}
+                  whileHover={{ y: -3, scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="glass flex h-11 w-11 items-center justify-center rounded-full text-text-secondary transition-colors hover:text-white"
+                >
+                  <Icon size={18} />
+                </motion.a>
+              ))}
+            </motion.div>
         </motion.div>
         </div>
 
