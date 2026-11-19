@@ -3,8 +3,11 @@ import { Certificate, Project, Skill, TimelineItem } from "./types";
 export const profile = {
   name: "Paul Anthony Pancho",
   title: "Full-Stack Developer",
-  // Hero line: "> Working as a <role>" where the role decrypts into the next one.
-  taglinePrefix: "Working as a",
+  // Hero line: "> Aspiring <role>" where the role slowly decrypts into the next one.
+  // Keep this short: only the roles he's applying for, each backed by a project.
+  taglinePrefix: "Aspiring",
+  heroRoles: ["Full-Stack Developer", "Mobile App Developer", "Machine Learning Developer"],
+  // Everything he does (Byte, the chatbot, uses this list).
   taglines: [
     "Full-Stack Developer",
     "Frontend Developer",

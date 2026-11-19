@@ -64,7 +64,8 @@ export default function Hero() {
               <span className="text-primary">&gt;</span>{" "}
               <span className="text-white">{profile.taglinePrefix}</span>{" "}
               <span className="block sm:inline">
-                <DecryptText words={profile.taglines} className="font-bold text-primary" />
+                {/* Slow reveal: each role stays readable for 4.5s, then decrypts over ~1.8s. */}
+                <DecryptText words={profile.heroRoles} hold={4500} frame={75} scrambleFrames={6} className="font-bold text-primary" />
                 <span className="typewriter-cursor">▋</span>
               </span>
             </motion.p>
