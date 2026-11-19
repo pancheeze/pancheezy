@@ -63,9 +63,10 @@ export default async function HomePage() {
       />
       <LoadingScreen />
       <Hero />
+      {/* Projects come first: they're the proof, so recruiters see them right after the intro. */}
+      <Projects activity={activity} />
       <About />
       <Skills />
-      <Projects activity={activity} />
       <Timeline />
       <Certificates />
       <Contact />
