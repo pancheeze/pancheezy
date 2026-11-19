@@ -139,10 +139,10 @@ export const projects: Project[] = [
       ],
       stack: ["Flutter", "Dart", "TensorFlow Lite", "Python", "Camera", "Shared Preferences"],
       process: [
-        "Built the original Flutter app: camera capture, scan flow and history",
-        "Integrated the disease-classification model on-device with TensorFlow Lite",
+        "Designed the original UI myself in Canva and coded the Flutter app: camera capture, scan flow and history",
+        "Trained the disease-classification model in Python and integrated it on-device with TensorFlow Lite",
         "Added Filipino and English language support",
-        "Team v2: UI/UX redesign, retrained model and release build",
+        "Team v2: I retrained the model (96.56% test accuracy); my groupmate replaced my Canva design with an AI-generated UI (the one the app uses now); release build",
         "Published a download website for farmers",
       ],
       challenges: [
@@ -156,7 +156,7 @@ export const projects: Project[] = [
         "/images/projects/chickdetect-advice.jpg",
       ],
       result:
-        "The v2 model reaches 96.56% test accuracy across 5 classes. A team capstone: I led programming and built the original app, and the v2 redesign and website were done with my groupmate.",
+        "The v2 model, which I retrained, reaches 96.56% test accuracy across 5 classes. A team capstone: I led programming, trained and retrained the machine-learning model and integrated it into the app, and designed (in Canva) and coded the original app. The current v2 interface is an AI-generated redesign made by my groupmate, replacing my original Canva design, and the website was done with my groupmate.",
     },
   },
   {
