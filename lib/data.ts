@@ -330,6 +330,7 @@ export const projects: Project[] = [
     description:
       "A 3D low-poly basketball game on a floating island court: time your shot with the meter, chain makes, and watch your streak multiply your score.",
     category: "3D Game · Unity",
+    folder: "game_dev",
     role: "Solo · gameplay code written with AI assistance",
     tech: ["Unity 6", "C#", "TextMesh Pro"],
     github: undefined,
@@ -381,6 +382,7 @@ export const projects: Project[] = [
     description:
       "A searchable catalog of Minecraft blocks, tools, and items pulled straight from a Minecraft API, with category filters and a pixel-art interface.",
     category: "Web Application",
+    folder: "websites",
     tech: ["HTML", "CSS", "JavaScript", "Bootstrap", "REST API"],
     github: "https://github.com/pancheeze/mineventory_api",
     demo: "https://pancheeze.github.io/mineventory_api/",
@@ -424,6 +426,7 @@ export const projects: Project[] = [
     description:
       "A UI/UX prototype for an online marketplace where creators sell digital art, photography, illustrations, templates and 3D models, designed in Figma.",
     category: "Group Project · UI/UX Design",
+    folder: "group_projects",
     role: "Co-designed the whole prototype with my group",
     tech: ["Figma", "UI/UX", "Prototyping"],
     demo: "https://www.figma.com/design/BlOaDUTQhP7m8uzTudpUuR/prototypeA2C",
@@ -471,6 +474,7 @@ export const projects: Project[] = [
     description:
       "A responsive travel showcase for Ireland, with a full-screen hero, featured places, a photo carousel and a gallery, styled with glassmorphism.",
     category: "Website",
+    folder: "websites",
     tech: ["HTML", "CSS", "Bootstrap", "Bootstrap Icons"],
     github: "https://github.com/pancheeze/irelandSC",
     demo: "https://pancheeze.github.io/irelandSC/",
@@ -516,6 +520,7 @@ export const projects: Project[] = [
     description:
       "A responsive card gallery showcasing different types of knives, each with a short history and a link to learn more.",
     category: "Website",
+    folder: "websites",
     tech: ["HTML", "CSS", "JavaScript", "Bootstrap"],
     github: "https://github.com/pancheeze/knife-showcase",
     demo: "https://pancheeze.github.io/knife-showcase/",

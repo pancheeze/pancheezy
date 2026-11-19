@@ -139,6 +139,96 @@ body::-webkit-scrollbar {
   }
 }
 
+/* ---------- Project folders ("More projects", components/ui/ProjectFolder) ---------- */
+/* A transparent glass folder; on hover/focus the screenshots inside peek up a little. */
+.folder-art {
+  position: relative;
+  aspect-ratio: 4 / 3;
+}
+.folder-back,
+.folder-front {
+  position: absolute;
+  border: 1px solid rgba(233, 230, 223, 0.12);
+  transition: border-color 0.35s ease, transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.folder-back {
+  inset: 12% 0 0 0;
+  border-radius: 4px 14px 14px 14px;
+  background: rgba(233, 230, 223, 0.035);
+}
+/* The tab on top of the back panel. */
+.folder-back::before {
+  content: "";
+  position: absolute;
+  left: -1px;
+  bottom: 100%;
+  width: 42%;
+  height: 14%;
+  border: 1px solid rgba(233, 230, 223, 0.12);
+  border-bottom: none;
+  border-radius: 10px 10px 0 0;
+  background: rgba(233, 230, 223, 0.035);
+}
+.folder-paper {
+  position: absolute;
+  top: 20%;
+  height: 52%;
+  overflow: hidden;
+  border-radius: 6px;
+  background: #13181d;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+  transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.folder-paper-1 { left: 10%; right: 22%; transform: rotate(-3deg); }
+.folder-paper-2 { left: 24%; right: 9%; transform: rotate(3deg); }
+.folder-paper-3 { left: 17%; right: 16%; top: 23%; transform: rotate(0deg); }
+.folder-paper-1.folder-papers-1 { left: 16%; right: 16%; transform: rotate(-1deg); }
+.folder-front {
+  inset: 42% 0 0 0;
+  border-radius: 12px;
+  background: linear-gradient(180deg, rgba(26, 31, 37, 0.55), rgba(15, 19, 23, 0.82));
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  transform-origin: 50% 100%;
+}
+/* Hover / keyboard focus / open: the documents peek up, the front dips a touch, the glass takes the accent color. */
+.project-folder:hover .folder-paper-1,
+.project-folder:focus-visible .folder-paper-1,
+.project-folder.is-open .folder-paper-1 { transform: translateY(-16%) rotate(-5deg); }
+.project-folder:hover .folder-paper-2,
+.project-folder:focus-visible .folder-paper-2,
+.project-folder.is-open .folder-paper-2 { transform: translateY(-22%) rotate(5deg); }
+.project-folder:hover .folder-paper-3,
+.project-folder:focus-visible .folder-paper-3,
+.project-folder.is-open .folder-paper-3 { transform: translateY(-28%) rotate(0deg); }
+.project-folder:hover .folder-paper-1.folder-papers-1,
+.project-folder:focus-visible .folder-paper-1.folder-papers-1,
+.project-folder.is-open .folder-paper-1.folder-papers-1 { transform: translateY(-20%) rotate(-2deg); }
+.project-folder:hover .folder-front,
+.project-folder:focus-visible .folder-front,
+.project-folder.is-open .folder-front {
+  transform: perspective(500px) rotateX(-7deg);
+  border-color: var(--folder-accent);
+}
+.project-folder:hover .folder-back,
+.project-folder:focus-visible .folder-back,
+.project-folder.is-open .folder-back,
+.project-folder:hover .folder-back::before,
+.project-folder:focus-visible .folder-back::before,
+.project-folder.is-open .folder-back::before { border-color: color-mix(in srgb, var(--folder-accent) 55%, transparent); }
+/* Touch screens have no hover: the documents rest slightly raised so the folder still looks "full". */
+@media (hover: none) {
+  .folder-paper-1 { transform: translateY(-8%) rotate(-4deg); }
+  .folder-paper-2 { transform: translateY(-12%) rotate(4deg); }
+  .folder-paper-3 { transform: translateY(-14%) rotate(0deg); }
+  .folder-paper-1.folder-papers-1 { transform: translateY(-10%) rotate(-2deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .folder-paper,
+  .folder-front,
+  .folder-back { transition: none; }
+}
+
 /* ---------- Byte, the wandering pixel mascot (components/byte) ---------- */
 /* Chat icon (a pixel terminal): the "_" cursor blinks, faster while Byte is answering. */
 .byte-cursor {

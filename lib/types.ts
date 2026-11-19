@@ -21,6 +21,8 @@ export interface Project {
   role?: string;
   /** Featured projects get large cards; the rest are listed under "More projects". */
   featured?: boolean;
+  /** For non-featured projects: which "More projects" folder it lives in. */
+  folder?: "game_dev" | "websites" | "group_projects";
   tech: string[];
   github?: string;
   demo?: string;
