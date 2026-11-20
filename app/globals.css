@@ -279,38 +279,50 @@ body::-webkit-scrollbar {
   border-color: var(--folder-accent);
   box-shadow: 0 0 14px color-mix(in srgb, var(--folder-accent) 35%, transparent);
 }
-/* Phone skills terminal (SkillTerminal in Skills.tsx): code drifting past a blinking cursor. */
+/* Phone skills terminal (SkillTerminal in Skills.tsx): area names drift past a blinking cursor;
+   the current area's code sits below. */
 .code-track {
   scroll-behavior: auto; /* the drift moves a fraction of a pixel per frame; smooth scrolling swallows it */
-  -webkit-mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
-  mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 15%, #000 85%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 15%, #000 85%, transparent);
 }
-.code-line { padding-inline: 1.1rem; }
-.code-kw { color: #ECA35F; }
-.code-name { color: #7AA5C4; }
-.code-punc { color: #98A2AB; }
-.code-str { color: #9CC7A7; font: inherit; padding: 0.15rem 0; border-radius: 3px; }
-.code-str.is-coursework { color: #B9B4A9; }
-.code-str.is-selected { background: rgba(127, 168, 139, 0.18); box-shadow: 0 0 0 2px rgba(127, 168, 139, 0.18); }
-.code-str:focus-visible { outline: 1px solid #ECA35F; outline-offset: 2px; }
-.code-comment { color: #6F7A84; font-style: italic; }
-/* Away from the cursor: dim and colorless, like commented-out code. Under it: full syntax colors. */
-.code-line { opacity: 0.35; filter: grayscale(1); transition: opacity 0.4s ease, filter 0.4s ease; }
-.code-line[data-lit] { opacity: 1; filter: none; }
+.code-tab {
+  font: inherit;
+  padding: 0.1rem 1.1rem;
+  color: #6F7A84;
+  transition: color 0.35s ease, text-shadow 0.35s ease;
+}
+.code-tab[data-lit] {
+  color: var(--folder-accent);
+  text-shadow: 0 0 10px color-mix(in srgb, var(--folder-accent) 45%, transparent);
+}
 .code-cursor {
   position: absolute;
-  top: 0;
-  bottom: 0;
+  top: 0.15rem;
+  bottom: 0.15rem;
   left: 50%;
   width: 2px;
   z-index: 1;
   pointer-events: none;
   background: #ECA35F;
   box-shadow: 0 0 8px 1px rgba(236, 163, 95, 0.55);
+  opacity: 0.85;
   animation: code-blink 1.1s steps(1, end) infinite;
 }
 @keyframes code-blink { 50% { opacity: 0.15; } }
-/* The comment line "types" itself out each time it changes. */
+.code-kw { color: #ECA35F; }
+.code-name { color: #7AA5C4; }
+.code-punc { color: #98A2AB; }
+.code-str { color: #9CC7A7; font: inherit; padding: 0.1rem 0; border-radius: 3px; }
+.code-str.is-coursework { color: #B9B4A9; }
+.code-str.is-selected { background: rgba(127, 168, 139, 0.18); box-shadow: 0 0 0 2px rgba(127, 168, 139, 0.18); }
+.code-str:focus-visible,
+.code-tab:focus-visible { outline: 1px solid #ECA35F; outline-offset: 2px; }
+.code-comment { color: #6F7A84; font-style: italic; }
+/* All areas' code stacked in one grid cell: the box keeps the tallest one's height. */
+.code-block { grid-area: 1 / 1; visibility: hidden; opacity: 0; transition: opacity 0.25s ease; }
+.code-block.is-current { visibility: visible; opacity: 1; }
+/* A comment line "types" itself out each time it changes. */
 .code-typed {
   display: inline-block;
   max-width: 100%;
@@ -320,10 +332,16 @@ body::-webkit-scrollbar {
   animation: code-type 0.7s steps(28, end) both;
 }
 @keyframes code-type { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+/* Boot-up once on scroll-in: "$ cat stack.ts" types itself, then the output appears. */
+.skill-term .term-cmd { display: inline-block; clip-path: inset(0 100% 0 0); }
+.skill-term .term-body { opacity: 0; }
+.skill-term[data-booted] .term-cmd { animation: code-type 0.6s steps(14, end) 0.15s both; }
+.skill-term[data-booted] .term-body { opacity: 1; transition: opacity 0.5s ease 0.85s; }
 @media (prefers-reduced-motion: reduce) {
   .code-cursor { display: none; }
-  .code-line { opacity: 1; filter: none; }
   .code-typed { animation: none; }
+  .skill-term .term-cmd { clip-path: none; animation: none; }
+  .skill-term .term-body { opacity: 1; transition: none; }
 }
 /* Cursor spotlight (laptop): a soft glow in the card's color that follows the mouse. */
 .skill-card::before {

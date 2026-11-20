@@ -15,7 +15,7 @@ import { EASE, staggerContainer } from "@/lib/utils";
 // (●), coursework-only ones stay dim (○). Hover/tap a chip to see "used in: ..." with links to those
 // projects. Evidence comes from the projects' tech lists in lib/data.ts.
 // Laptop/tablet: a bento grid of cards under a slow logo strip.
-// Phones: the skills as code in a terminal window, drifting past a blinking cursor.
+// Phones: a terminal window: area names drift past a blinking cursor, the current area shows as code.
 
 type Category = (typeof skillCategories)[number];
 
@@ -222,110 +222,123 @@ function CategoryCard({ category }: { category: Category }) {
   );
 }
 
-/** A skill as a code string, e.g. "Python". Scrambles into place when its line boots. */
+/** A skill as a code string, e.g. "Python". Scrambles into place each time its block boots. */
 function SkillString({
   item,
   boot,
-  clone,
   selected,
   onPick,
+  last,
 }: {
   item: Item;
   boot: number;
-  clone: boolean;
   selected: boolean;
   onPick: () => void;
+  last: boolean;
 }) {
   const [shown, decrypt] = useDecrypt(`"${item.name}"`);
   useEffect(() => {
     if (boot) decrypt();
   }, [boot, decrypt]);
   return (
-    <>
+    <span className="whitespace-nowrap">
       <button
         type="button"
-        tabIndex={clone ? -1 : undefined}
         onClick={onPick}
-        aria-pressed={clone ? undefined : selected}
-        aria-label={clone ? undefined : `${item.name}: where it's used`}
+        aria-pressed={selected}
+        aria-label={`${item.name}: where it's used`}
         className={`code-str ${item.ev ? "" : "is-coursework"} ${selected ? "is-selected" : ""}`}
       >
         {shown}
       </button>
       {!item.ev && <span className="code-comment">{" /* coursework */"}</span>}
-    </>
-  );
-}
-
-/**
- * One area as a line of code: const frontend = ["HTML", "CSS", ...];
- * SkillTerminal marks the line under the cursor with data-lit and fires "skill:lit" on it,
- * which decrypts the line from glyphs.
- */
-function CodeLine({
-  category,
-  clone,
-  selectedSkill,
-  onPick,
-}: {
-  category: Category;
-  clone: boolean;
-  selectedSkill: string | null;
-  onPick: (category: Category, skill: string) => void;
-}) {
-  const { folder } = CARD[category];
-  const { items } = categoryData(category);
-  const [name, decrypt] = useDecrypt(folder);
-  const [boot, setBoot] = useState(0);
-  const ref = useRef<HTMLSpanElement>(null);
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const onLit = () => {
-      decrypt();
-      setBoot((b) => b + 1);
-    };
-    el.addEventListener("skill:lit", onLit);
-    return () => el.removeEventListener("skill:lit", onLit);
-  }, [decrypt]);
-
-  return (
-    <span ref={ref} data-code-line data-category={category} className="code-line" aria-hidden={clone || undefined}>
-      <span className="code-kw">const </span>
-      <span className="code-name">{name}</span>
-      <span className="code-punc"> = [</span>
-      {items.map((s, i) => (
-        <span key={s.name}>
-          {i > 0 && <span className="code-punc">, </span>}
-          <SkillString
-            item={s}
-            boot={boot}
-            clone={clone}
-            selected={selectedSkill === s.name}
-            onPick={() => onPick(category, s.name)}
-          />
-        </span>
-      ))}
-      <span className="code-punc">];</span>
+      {!last && <span className="code-punc">,</span>}{" "}
     </span>
   );
 }
 
-const DRIFT_PX_PER_S = 36; // drift speed
+/**
+ * One area as formatted code. All seven are stacked in the same spot (so the terminal keeps the
+ * height of the tallest and nothing below it jumps); only the current one is visible. Each time it
+ * becomes current, its name and strings decrypt from glyphs.
+ */
+function CodeBlock({
+  category,
+  current,
+  selectedSkill,
+  onPick,
+}: {
+  category: Category;
+  current: boolean;
+  selectedSkill: string | null;
+  onPick: (skill: string) => void;
+}) {
+  const { folder, accent } = CARD[category];
+  const { items, allProjects, note } = categoryData(category);
+  const [name, decrypt] = useDecrypt(folder);
+  const [boot, setBoot] = useState(0);
+
+  useEffect(() => {
+    if (!current) return;
+    decrypt();
+    setBoot((b) => b + 1); // eslint-disable-line react-hooks/set-state-in-effect -- re-run the strings' decrypt
+  }, [current, decrypt]);
+
+  return (
+    <div className={`code-block ${current ? "is-current" : ""}`} aria-hidden={!current || undefined}>
+      <p>
+        <span className="code-kw">const </span>
+        <span className="code-name">{name}</span>
+        <span className="code-punc"> = [</span>
+      </p>
+      <p className="pl-4">
+        {items.map((s, i) => (
+          <SkillString
+            key={s.name}
+            item={s}
+            boot={boot}
+            selected={selectedSkill === s.name}
+            onPick={() => onPick(s.name)}
+            last={i === items.length - 1}
+          />
+        ))}
+      </p>
+      <p>
+        <span className="code-punc">];</span>
+      </p>
+      <p className="mt-1 truncate text-[11px] text-text-secondary">
+        <span className="code-comment">{"// "}</span>
+        {allProjects.length ? (
+          <>
+            used in: <ProjectLinks list={allProjects.slice(0, 2)} accent={accent} />
+            {allProjects.length > 2 && <span className="text-text-muted"> +{allProjects.length - 2}</span>}
+          </>
+        ) : (
+          <>used in: {note ?? "coursework"}</>
+        )}
+      </p>
+    </div>
+  );
+}
+
+const DRIFT_PX_PER_S = 36; // drift speed of the names row
+const DWELL_MS = 1500; // a name rests under the cursor this long before drifting on
 const IDLE_MS = 4000; // after a touch/swipe, wait this long before drifting again
 
 /**
- * Phones: the skills as code in a terminal window. One long line of code drifts slowly past a
- * blinking cursor in the middle; the line under the cursor decrypts from glyphs and lights up in
- * syntax colors, and the comment below types out where those skills were used. Tap a skill for
- * just that one. Touch stops the drift (swipe by hand, with native momentum); it drifts again after
- * a quiet moment. Three copies of the code make the loop seamless. Only runs while on screen; with
- * reduced motion it's a still, swipeable line.
+ * Phones: the skills as code in a terminal window. A row of area names drifts slowly past a
+ * blinking cursor; the name under it lights up, rests for a moment, and the full code for that area
+ * decrypts in below (formatted over a few lines, so it's all readable and holds still for tapping).
+ * Tap a skill to see where it was used; tap a name to jump to it. Touch stops the drift (swipe by
+ * hand, with native momentum); it drifts again after a quiet moment. Three copies of the names make
+ * the loop seamless. Boots once on scroll-in ("$ cat stack.ts" types itself), only runs on screen,
+ * and is still with reduced motion.
  */
 function SkillTerminal() {
+  const termRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
-  const [lit, setLit] = useState<Category | null>(null);
+  const booted = useInView(termRef, { once: true, amount: 0.4 });
+  const [lit, setLit] = useState<Category>(skillCategories[0]);
   const [picked, setPicked] = useState<{ category: Category; skill: string } | null>(null);
 
   useEffect(() => {
@@ -333,15 +346,18 @@ function SkillTerminal() {
     if (!track) return;
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const sets = track.querySelectorAll<HTMLElement>("[data-set]");
-    const lines = [...track.querySelectorAll<HTMLElement>("[data-code-line]")];
+    const names = [...track.querySelectorAll<HTMLElement>("[data-name]")];
     const setWidth = () => sets[1].offsetLeft - sets[0].offsetLeft;
+    const centerOf = (el: HTMLElement) => el.offsetLeft + el.offsetWidth / 2;
 
-    let pos = setWidth(); // start on the middle copy
+    // Start on the middle copy, with the first name under the cursor.
+    let pos = centerOf(names[skillCategories.length]) - track.clientWidth / 2;
     track.scrollLeft = pos;
     let frame = 0;
     let last = 0;
     let touching = false;
     let idleUntil = 0;
+    let dwellUntil = 0;
     let current: HTMLElement | null = null;
 
     // Keep the view on the middle copy; the copies are identical, so the jump can't be seen.
@@ -351,30 +367,33 @@ function SkillTerminal() {
       else if (track.scrollLeft < w - track.clientWidth / 2) track.scrollLeft += w;
     };
 
-    // Light the line under the cursor (the middle of the track).
+    // Light the name nearest the cursor (the middle of the track). Returns true if it changed.
     const scan = () => {
       const mid = track.scrollLeft + track.clientWidth / 2;
-      const hit = lines.find((l) => mid >= l.offsetLeft - 12 && mid < l.offsetLeft + l.offsetWidth + 12) ?? current;
-      if (hit === current) return;
+      let hit = names[0];
+      for (const n of names) if (Math.abs(centerOf(n) - mid) < Math.abs(centerOf(hit) - mid)) hit = n;
+      if (hit === current) return false;
       current?.removeAttribute("data-lit");
-      hit?.setAttribute("data-lit", "");
-      hit?.dispatchEvent(new Event("skill:lit"));
+      hit.setAttribute("data-lit", "");
       current = hit;
-      setLit((hit?.dataset.category as Category) ?? null);
+      setLit(hit.dataset.name as Category);
+      return true;
     };
 
     const tick = (now: number) => {
       const dt = last ? Math.min(64, now - last) : 16;
       last = now;
-      if (!reduce && !touching && now > idleUntil) {
+      const auto = !reduce && !touching && now > idleUntil;
+      if (auto && now > dwellUntil) {
         pos += (DRIFT_PX_PER_S * dt) / 1000;
         const w = setWidth();
         if (pos >= 2 * w) pos -= w;
         track.scrollLeft = pos;
-      } else {
+      } else if (!auto) {
         pos = track.scrollLeft;
       }
-      scan();
+      // A new name reached the cursor: let it rest there for a moment.
+      if (scan() && auto) dwellUntil = now + DWELL_MS;
       frame = requestAnimationFrame(tick);
     };
     const start = () => {
@@ -414,6 +433,13 @@ function SkillTerminal() {
       // Keyboard users: hold still while they read (a tap also focuses the button; that's not this).
       if ((e.target as HTMLElement).matches(":focus-visible")) idleUntil = performance.now() + 10_000;
     };
+    // Tapping a name brings it to the cursor.
+    const onClick = (e: MouseEvent) => {
+      const name = (e.target as HTMLElement).closest<HTMLElement>("[data-name]");
+      if (!name) return;
+      idleUntil = performance.now() + IDLE_MS;
+      track.scrollTo({ left: centerOf(name) - track.clientWidth / 2, behavior: reduce ? "auto" : "smooth" });
+    };
 
     track.addEventListener("pointerdown", hold);
     track.addEventListener("touchstart", hold, { passive: true });
@@ -423,6 +449,7 @@ function SkillTerminal() {
     track.addEventListener("wheel", onWheel, { passive: true });
     track.addEventListener("scroll", onScroll, { passive: true });
     track.addEventListener("focusin", onFocus);
+    track.addEventListener("click", onClick);
     scan();
 
     return () => {
@@ -436,43 +463,16 @@ function SkillTerminal() {
       track.removeEventListener("wheel", onWheel);
       track.removeEventListener("scroll", onScroll);
       track.removeEventListener("focusin", onFocus);
+      track.removeEventListener("click", onClick);
     };
   }, []);
 
-  // A picked skill only stays picked while its line is the one under the cursor.
+  // The tapped skill (only while its area is the current one).
   const pick = picked && picked.category === lit ? picked : null;
-  const onPick = (category: Category, skill: string) =>
-    setPicked((p) => (p && p.category === category && p.skill === skill ? null : { category, skill }));
-
-  // The comment line under the code: the picked skill, or the whole line under the cursor.
-  let comment: React.ReactNode = null;
-  let commentKey = "none";
-  if (lit) {
-    const { accent } = CARD[lit];
-    const { items, allProjects, note } = categoryData(lit);
-    const item = pick ? items.find((s) => s.name === pick.skill) : undefined;
-    if (item) {
-      commentKey = `${lit}-${item.name}`;
-      comment = (
-        <>
-          {item.name} → <UsedIn item={item} accent={accent} />
-        </>
-      );
-    } else {
-      commentKey = lit;
-      comment = allProjects.length ? (
-        <>
-          used in: <ProjectLinks list={allProjects.slice(0, 3)} accent={accent} />
-          {allProjects.length > 3 && ` +${allProjects.length - 3}`}
-        </>
-      ) : (
-        <>used in: {note ?? "coursework"}</>
-      );
-    }
-  }
+  const pickedItem = pick ? categoryData(lit).items.find((s) => s.name === pick.skill) : undefined;
 
   return (
-    <div className="skill-term glass-card overflow-hidden sm:hidden">
+    <div ref={termRef} className="skill-term glass-card overflow-hidden sm:hidden" data-booted={booted || undefined}>
       <div className="flex items-center gap-1.5 border-b border-white/[0.06] px-3.5 py-2.5" aria-hidden>
         <span className="h-2.5 w-2.5 rounded-full bg-[#E58A8A]/70" />
         <span className="h-2.5 w-2.5 rounded-full bg-[#ECA35F]/70" />
@@ -480,38 +480,74 @@ function SkillTerminal() {
         <span className="ml-2 font-mono text-[11px] text-text-muted">~/skills — zsh</span>
       </div>
 
-      <div className="py-3 font-mono text-[12px]">
+      <div className="py-3 font-mono text-[12px] leading-relaxed">
         <p className="px-3.5 text-text-secondary">
-          <span className="text-primary">$</span> cat stack.ts
-        </p>
-
-        <div className="relative mt-2.5">
-          <span className="code-cursor" aria-hidden />
-          <div ref={trackRef} role="region" aria-label="Skills by area, as code" className="code-track featured-track overflow-x-auto">
-            <div className="flex w-max items-center whitespace-nowrap py-1.5">
-              {[0, 1, 2].map((copy) => (
-                <span key={copy} data-set className="flex shrink-0 items-center">
-                  {skillCategories.map((c) => (
-                    <CodeLine
-                      key={c}
-                      category={c}
-                      clone={copy !== 1}
-                      selectedSkill={pick && pick.category === c ? pick.skill : null}
-                      onPick={onPick}
-                    />
-                  ))}
-                </span>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        <p className="mt-2.5 truncate px-3.5 text-[11px] leading-snug text-text-secondary" aria-live="polite">
-          <span key={commentKey} className="code-typed">
-            <span className="text-text-muted">{"// "}</span>
-            {comment}
+          <span className="term-cmd">
+            <span className="text-primary">$</span> cat stack.ts
           </span>
         </p>
+
+        <div className="term-body">
+          {/* Names row: drifts past the cursor. */}
+          <div className="relative mt-2">
+            <span className="code-cursor" aria-hidden />
+            <div
+              ref={trackRef}
+              role="group"
+              aria-label="Skill areas (tap one to show it)"
+              className="code-track featured-track overflow-x-auto"
+            >
+              <div className="flex w-max items-center whitespace-nowrap py-1">
+                {[0, 1, 2].map((copy) => (
+                  <span key={copy} data-set className="flex shrink-0 items-center">
+                    {skillCategories.map((c) => (
+                      <button
+                        key={c}
+                        type="button"
+                        data-name={c}
+                        tabIndex={copy === 1 ? undefined : -1}
+                        aria-hidden={copy !== 1 || undefined}
+                        className="code-tab"
+                        style={{ "--folder-accent": CARD[c].accent } as React.CSSProperties}
+                      >
+                        {CARD[c].folder}
+                      </button>
+                    ))}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* The current area's code: all stacked in one spot, only the current one shown. */}
+          <div className="mx-3.5 mt-2 border-t border-white/[0.06] pt-2.5" aria-live="polite">
+            <div className="grid">
+              {skillCategories.map((c) => (
+                <CodeBlock
+                  key={c}
+                  category={c}
+                  current={c === lit}
+                  selectedSkill={pick && pick.category === c ? pick.skill : null}
+                  onPick={(skill) =>
+                    setPicked((p) => (p && p.category === c && p.skill === skill ? null : { category: c, skill }))
+                  }
+                />
+              ))}
+            </div>
+            <p className="truncate text-[11px] text-text-secondary">
+              <span key={pickedItem ? `${lit}-${pickedItem.name}` : "tip"} className="code-typed">
+                <span className="code-comment">{"// "}</span>
+                {pickedItem ? (
+                  <>
+                    {pickedItem.name} → <UsedIn item={pickedItem} accent={CARD[lit].accent} />
+                  </>
+                ) : (
+                  <span className="code-comment">tip: tap a skill to see where it&apos;s used</span>
+                )}
+              </span>
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -589,10 +625,9 @@ export default function Skills() {
 
         <SkillTerminal />
 
-        <p className="mt-5 text-center font-mono text-[11px] text-text-secondary">
+        <p className="mt-5 hidden text-center font-mono text-[11px] text-text-secondary sm:block">
           <span className="text-primary">●</span> used in a project · <span className="text-text-muted">○</span> coursework ·{" "}
-          {skills.length} skills · <span className="sm:hidden">touch to pause, tap a skill</span>
-          <span className="hidden sm:inline">hover or tap a skill to see where it&apos;s used</span>
+          {skills.length} skills · hover or tap a skill to see where it&apos;s used
         </p>
       </div>
     </section>
