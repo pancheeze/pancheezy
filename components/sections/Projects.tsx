@@ -33,9 +33,10 @@ function FeaturedProjects() {
     setActive(Math.max(0, Math.min(featured.length - 1, Math.round(track.scrollLeft / step))));
   }, []);
 
-  // Coverflow feel on phones: each card's size, tilt and opacity follow its distance from the
-  // center while swiping, so the centered card is big and the others fall behind. Written straight
-  // to the DOM every frame (no React re-renders). Off on the desktop grid and for reduced motion.
+  // Curved 3D wall on phones (like standing inside a cylinder): the centered card faces you and the
+  // others turn inward, outer edge toward you, and tuck in behind it as slivers. Follows the swipe
+  // every frame, written straight to the DOM (no React re-renders). Off on the desktop grid and for
+  // reduced motion.
   useEffect(() => {
     const track = trackRef.current;
     if (!track) return;
@@ -49,14 +50,18 @@ function FeaturedProjects() {
         if (!isCarousel || reduce) {
           slide.style.transform = "";
           slide.style.opacity = "";
+          slide.style.zIndex = "";
           continue;
         }
         const center = slide.offsetLeft - track.scrollLeft + slide.offsetWidth / 2;
         const d = (center - track.clientWidth / 2) / slide.offsetWidth; // 0 = centered, ±1 = one card away
-        const c = Math.max(-1, Math.min(1, d)); // cards further than one away look the same as one away
+        const c = Math.max(-2, Math.min(2, d));
         const a = Math.abs(c);
-        slide.style.transform = `perspective(900px) rotateY(${(-c * 16).toFixed(2)}deg) scale(${(1 - 0.12 * a).toFixed(3)})`;
-        slide.style.opacity = (1 - 0.5 * a).toFixed(3);
+        const turn = Math.sign(c) * Math.min(a, 1.4) * 42; // degrees; outer edge swings toward the viewer
+        const tuck = -c * slide.offsetWidth * 0.2; // pull side cards in so they peek as slivers
+        slide.style.transform = `translateX(${tuck.toFixed(1)}px) perspective(700px) rotateY(${(-turn).toFixed(2)}deg) scale(${(1 - 0.06 * Math.min(a, 1)).toFixed(3)})`;
+        slide.style.opacity = (1 - 0.3 * Math.min(a, 1.5)).toFixed(3);
+        slide.style.zIndex = String(10 - Math.round(a * 3));
       }
     };
     const schedule = () => {
@@ -101,7 +106,8 @@ function FeaturedProjects() {
         aria-label="Featured projects"
         // -my-10/py-10: a scrolling row clips vertically too, so this gives the cards' glow and hover
         // lift room above and below without changing the layout.
-        className="featured-track -mx-6 -my-10 flex snap-x snap-mandatory scroll-px-6 gap-4 overflow-x-auto px-6 py-10 sm:-mx-8 sm:scroll-px-8 sm:px-8 md:m-0 md:grid md:grid-cols-2 md:gap-6 md:overflow-visible md:p-0"
+        // px-[10vw] with 80vw cards: the first and last cards can sit centered too.
+        className="featured-track -mx-6 -my-10 flex snap-x snap-mandatory gap-4 overflow-x-auto px-[10vw] py-10 sm:-mx-8 md:m-0 md:grid md:grid-cols-2 md:gap-6 md:overflow-visible md:p-0"
       >
         {featured.map((project, i) => (
           <div
@@ -109,7 +115,7 @@ function FeaturedProjects() {
             aria-roledescription="slide"
             aria-label={`${i + 1} of ${featured.length}: ${project.name}`}
             data-active={i === active}
-            className="featured-slide w-[86%] shrink-0 snap-center md:w-auto"
+            className="featured-slide relative w-[80vw] shrink-0 snap-center md:w-auto"
           >
             <ProjectCard project={project} index={i} />
           </div>
