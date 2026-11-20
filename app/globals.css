@@ -279,25 +279,51 @@ body::-webkit-scrollbar {
   border-color: var(--folder-accent);
   box-shadow: 0 0 14px color-mix(in srgb, var(--folder-accent) 35%, transparent);
 }
-/* Phone skills carousel: chips pop in again each time a card reaches the center; the active
-   dot fills up until the next auto-advance. */
-.skill-slide { will-change: transform, opacity; }
-.skill-slide[data-active="true"] .skill-chip {
-  animation: chip-pop 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
-  animation-delay: calc(var(--i, 0) * 45ms + 0.1s);
+/* Phone skills terminal (SkillTerminal in Skills.tsx): code drifting past a blinking cursor. */
+.code-track {
+  scroll-behavior: auto; /* the drift moves a fraction of a pixel per frame; smooth scrolling swallows it */
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
 }
-@keyframes chip-pop {
-  from { opacity: 0.2; transform: scale(0.85); }
-  to { opacity: 1; transform: scale(1); }
+.code-line { padding-inline: 1.1rem; }
+.code-kw { color: #ECA35F; }
+.code-name { color: #7AA5C4; }
+.code-punc { color: #98A2AB; }
+.code-str { color: #9CC7A7; font: inherit; padding: 0.15rem 0; border-radius: 3px; }
+.code-str.is-coursework { color: #B9B4A9; }
+.code-str.is-selected { background: rgba(127, 168, 139, 0.18); box-shadow: 0 0 0 2px rgba(127, 168, 139, 0.18); }
+.code-str:focus-visible { outline: 1px solid #ECA35F; outline-offset: 2px; }
+.code-comment { color: #6F7A84; font-style: italic; }
+/* Away from the cursor: dim and colorless, like commented-out code. Under it: full syntax colors. */
+.code-line { opacity: 0.35; filter: grayscale(1); transition: opacity 0.4s ease, filter 0.4s ease; }
+.code-line[data-lit] { opacity: 1; filter: none; }
+.code-cursor {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 2px;
+  z-index: 1;
+  pointer-events: none;
+  background: #ECA35F;
+  box-shadow: 0 0 8px 1px rgba(236, 163, 95, 0.55);
+  animation: code-blink 1.1s steps(1, end) infinite;
 }
-.skill-progress { animation: skill-progress linear forwards; }
-@keyframes skill-progress {
-  from { width: 0%; }
-  to { width: 100%; }
+@keyframes code-blink { 50% { opacity: 0.15; } }
+/* The comment line "types" itself out each time it changes. */
+.code-typed {
+  display: inline-block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: bottom;
+  animation: code-type 0.7s steps(28, end) both;
 }
+@keyframes code-type { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
 @media (prefers-reduced-motion: reduce) {
-  .skill-slide[data-active="true"] .skill-chip { animation: none; }
-  .skill-progress { animation: none; width: 100%; }
+  .code-cursor { display: none; }
+  .code-line { opacity: 1; filter: none; }
+  .code-typed { animation: none; }
 }
 /* Cursor spotlight (laptop): a soft glow in the card's color that follows the mouse. */
 .skill-card::before {

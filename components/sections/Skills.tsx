@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { motion, useInView } from "framer-motion";
 import { Code2, Network } from "lucide-react";
@@ -11,11 +11,11 @@ import type { Project } from "@/lib/types";
 import { skillIcons } from "@/lib/skillIcons";
 import { EASE, staggerContainer } from "@/lib/utils";
 
-// Skills grouped into category cards. Each skill chip shows where it was used: skills backed by a
-// project glow (●), coursework-only ones stay dim (○). Hover/tap a chip to see "used in: ..." with
-// links to those projects. Evidence comes from the projects' tech lists in lib/data.ts.
-// Laptop/tablet: a bento grid under a slow logo strip. Phones: a carousel of the same cards that
-// advances gently on its own (pauses when touched).
+// Skills grouped by area. Each skill chip shows where it was used: skills backed by a project glow
+// (●), coursework-only ones stay dim (○). Hover/tap a chip to see "used in: ..." with links to those
+// projects. Evidence comes from the projects' tech lists in lib/data.ts.
+// Laptop/tablet: a bento grid of cards under a slow logo strip.
+// Phones: the skills as code in a terminal window, drifting past a blinking cursor.
 
 type Category = (typeof skillCategories)[number];
 
@@ -53,8 +53,17 @@ function evidenceFor(skill: string): Evidence | null {
   return hits.length ? { projects: hits } : null;
 }
 
-/** "used in: ChickDetect, SiliScan" with each project linking to its page. */
-function ProjectLinks({ list, accent }: { list: Project[]; accent: string }) {
+/** A category's skills with their evidence, plus every project the category was used in. */
+function categoryData(category: Category) {
+  const items = skills.filter((s) => s.category === category).map((s) => ({ ...s, ev: evidenceFor(s.name) }));
+  const allProjects = [...new Map(items.flatMap((s) => s.ev?.projects ?? []).map((p) => [p.slug, p])).values()];
+  const note = items.find((s) => s.ev?.note)?.ev?.note;
+  return { items, allProjects, note };
+}
+type Item = ReturnType<typeof categoryData>["items"][number];
+
+/** "ChickDetect, SiliScan" with each project linking to its page. */
+function ProjectLinks({ list, accent, tabbable = true }: { list: Project[]; accent: string; tabbable?: boolean }) {
   return (
     <>
       {list.map((p, i) => (
@@ -62,7 +71,8 @@ function ProjectLinks({ list, accent }: { list: Project[]; accent: string }) {
           {i > 0 && ", "}
           <Link
             href={`/projects/${p.slug}`}
-            className="underline decoration-white/20 underline-offset-2 transition-colors hover:text-white"
+            tabIndex={tabbable ? undefined : -1}
+            className="underline underline-offset-2 transition-colors hover:text-white"
             style={{ textDecorationColor: `${accent}66` }}
           >
             {p.name}
@@ -73,16 +83,29 @@ function ProjectLinks({ list, accent }: { list: Project[]; accent: string }) {
   );
 }
 
-function SkillIcon({ name }: { name: string }) {
+/** "used in: ..." for one skill. */
+function UsedIn({ item, accent, tabbable }: { item: Item; accent: string; tabbable?: boolean }) {
+  if (item.ev?.note) return <>used in: {item.ev.note}</>;
+  if (item.ev) {
+    return (
+      <>
+        used in: <ProjectLinks list={item.ev.projects} accent={accent} tabbable={tabbable} />
+      </>
+    );
+  }
+  return <>{item.name}: coursework (not in a project yet)</>;
+}
+
+function SkillIcon({ name, size = 15 }: { name: string; size?: number }) {
   const path = skillIcons[name];
   if (path) {
     return (
-      <svg viewBox="0 0 24 24" width={15} height={15} fill="currentColor" aria-hidden>
+      <svg viewBox="0 0 24 24" width={size} height={size} fill="currentColor" aria-hidden>
         <path d={path} />
       </svg>
     );
   }
-  return name === "REST APIs" ? <Network size={15} aria-hidden /> : <Code2 size={15} aria-hidden />;
+  return name === "REST APIs" ? <Network size={size} aria-hidden /> : <Code2 size={size} aria-hidden />;
 }
 
 // Cards "boot up" as they scroll in: the card fades up, its border traces itself, the title
@@ -104,18 +127,10 @@ const traceVariants = {
   show: { pathLength: 1, opacity: [0, 0.9, 0], transition: { duration: 1.3, ease: "easeInOut" as const } },
 };
 
-function CategoryCard({
-  category,
-  slide,
-  isActive = false,
-}: {
-  category: Category;
-  /** Phone carousel slide: fixed width, always shows the card's proof line, re-boots when centered. */
-  slide?: { index: number; total: number };
-  isActive?: boolean;
-}) {
+/** Laptop/tablet bento card. */
+function CategoryCard({ category }: { category: Category }) {
   const { folder, accent, span } = CARD[category];
-  const items = skills.filter((s) => s.category === category).map((s) => ({ ...s, ev: evidenceFor(s.name) }));
+  const { items } = categoryData(category);
   const [title, decrypt] = useDecrypt(`${folder}/`);
   const [active, setActive] = useState<string | null>(null);
   const activeItem = items.find((s) => s.name === active);
@@ -125,16 +140,8 @@ function CategoryCard({
   useEffect(() => {
     if (seen) decrypt();
   }, [seen, decrypt]);
-  // In the carousel, the title decrypts again each time the card comes to the center.
-  useEffect(() => {
-    if (slide && isActive) decrypt();
-  }, [slide, isActive, decrypt]);
 
-  // Every project this category's skills were used in (the carousel shows it without tapping).
-  const categoryProjects = [...new Map(items.flatMap((s) => s.ev?.projects ?? []).map((p) => [p.slug, p])).values()];
-  const categoryNote = items.find((s) => s.ev?.note)?.ev?.note;
-
-  // Laptop only: a glow follows the cursor inside the card and the card tilts slightly toward it.
+  // A glow follows the cursor inside the card and the card tilts slightly toward it (mouse only).
   const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
     const el = cardRef.current;
     if (!el || e.pointerType !== "mouse" || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
@@ -151,19 +158,13 @@ function CategoryCard({
   };
 
   return (
-    <motion.div
-      variants={cardVariants}
-      className={slide ? "skill-slide flex w-[78vw] max-w-[340px] shrink-0 snap-center" : span}
-      data-active={slide ? isActive : undefined}
-      aria-roledescription={slide ? "slide" : undefined}
-      aria-label={slide ? `${slide.index + 1} of ${slide.total}: ${category}` : undefined}
-    >
+    <motion.div variants={cardVariants} className={span}>
       <div
         ref={cardRef}
         onMouseEnter={decrypt}
         onPointerMove={onPointerMove}
         onPointerLeave={onPointerLeave}
-        className="skill-card glass-card group relative flex h-full w-full flex-col overflow-hidden p-3.5 sm:p-5"
+        className="skill-card glass-card group relative flex h-full flex-col overflow-hidden p-5"
         style={{ "--folder-accent": accent } as React.CSSProperties}
       >
         {/* The border tracing itself once, on scroll-in. */}
@@ -190,8 +191,8 @@ function CategoryCard({
         </div>
 
         <ul className="relative flex flex-wrap gap-2">
-          {items.map((s, i) => (
-            <motion.li key={s.name} variants={chipVariants} style={{ "--i": i } as React.CSSProperties}>
+          {items.map((s) => (
+            <motion.li key={s.name} variants={chipVariants}>
               <button
                 type="button"
                 onMouseEnter={() => setActive(s.name)}
@@ -207,40 +208,13 @@ function CategoryCard({
           ))}
         </ul>
 
-        {/* "used in" line: for the hovered/tapped chip. In the carousel, the whole card's projects
-            show when no chip is picked (most phone visitors never tap). */}
-        <p
-          id={`used-${folder}`}
-          className={`relative font-mono text-[11px] leading-snug text-text-secondary ${slide ? "mt-auto" : ""}`}
-          aria-live="polite"
-        >
-          {activeItem ? (
+        {/* "used in" line, only while a chip is hovered/tapped (keeps the cards compact). */}
+        <p id={`used-${folder}`} className="relative font-mono text-[11px] leading-snug text-text-secondary" aria-live="polite">
+          {activeItem && (
             <span className="mt-3 block">
               <span style={{ color: accent }}>↳ </span>
-              {activeItem.ev?.note ? (
-                `used in: ${activeItem.ev.note}`
-              ) : activeItem.ev ? (
-                <>
-                  used in: <ProjectLinks list={activeItem.ev.projects} accent={accent} />
-                </>
-              ) : (
-                `${activeItem.name}: coursework (not in a project yet)`
-              )}
+              <UsedIn item={activeItem} accent={accent} />
             </span>
-          ) : (
-            slide && (
-              <span className="mt-3 block">
-                <span style={{ color: accent }}>↳ </span>
-                {categoryProjects.length ? (
-                  <>
-                    used in: <ProjectLinks list={categoryProjects.slice(0, 3)} accent={accent} />
-                    {categoryProjects.length > 3 && ` +${categoryProjects.length - 3}`}
-                  </>
-                ) : (
-                  `used in: ${categoryNote ?? "coursework"}`
-                )}
-              </span>
-            )
           )}
         </p>
       </div>
@@ -248,141 +222,296 @@ function CategoryCard({
   );
 }
 
-const AUTO_MS = 4500; // time on each card before the carousel moves on
-const RESUME_MS = 8000; // after a touch, wait this long before moving again
+/** A skill as a code string, e.g. "Python". Scrambles into place when its line boots. */
+function SkillString({
+  item,
+  boot,
+  clone,
+  selected,
+  onPick,
+}: {
+  item: Item;
+  boot: number;
+  clone: boolean;
+  selected: boolean;
+  onPick: () => void;
+}) {
+  const [shown, decrypt] = useDecrypt(`"${item.name}"`);
+  useEffect(() => {
+    if (boot) decrypt();
+  }, [boot, decrypt]);
+  return (
+    <>
+      <button
+        type="button"
+        tabIndex={clone ? -1 : undefined}
+        onClick={onPick}
+        aria-pressed={clone ? undefined : selected}
+        aria-label={clone ? undefined : `${item.name}: where it's used`}
+        className={`code-str ${item.ev ? "" : "is-coursework"} ${selected ? "is-selected" : ""}`}
+      >
+        {shown}
+      </button>
+      {!item.ev && <span className="code-comment">{" /* coursework */"}</span>}
+    </>
+  );
+}
 
 /**
- * Phones: the category cards as a swipeable coverflow row (softer than the Featured one) that
- * advances by itself every few seconds. The active dot fills up before each move. Touching it
- * pauses it; it only runs while on screen, and never with reduced motion.
+ * One area as a line of code: const frontend = ["HTML", "CSS", ...];
+ * SkillTerminal marks the line under the cursor with data-lit and fires "skill:lit" on it,
+ * which decrypts the line from glyphs.
  */
-function SkillCarousel() {
-  const trackRef = useRef<HTMLDivElement>(null);
-  const [active, setActive] = useState(0);
-  const [paused, setPaused] = useState(false);
-  const [round, setRound] = useState(0); // restarts the progress bar after a pause
-  const resumeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const visible = useInView(trackRef, { amount: 0.5 });
-  const total = skillCategories.length;
-  const running = visible && !paused; // reduced motion: see the auto-advance effect and the CSS
+function CodeLine({
+  category,
+  clone,
+  selectedSkill,
+  onPick,
+}: {
+  category: Category;
+  clone: boolean;
+  selectedSkill: string | null;
+  onPick: (category: Category, skill: string) => void;
+}) {
+  const { folder } = CARD[category];
+  const { items } = categoryData(category);
+  const [name, decrypt] = useDecrypt(folder);
+  const [boot, setBoot] = useState(0);
+  const ref = useRef<HTMLSpanElement>(null);
 
-  useEffect(() => () => {
-    if (resumeTimer.current) clearTimeout(resumeTimer.current);
-  }, []);
-
-  const onScroll = useCallback(() => {
-    const track = trackRef.current;
-    const first = track?.firstElementChild as HTMLElement | null;
-    if (!track || !first) return;
-    const step = first.offsetWidth + parseFloat(getComputedStyle(track).columnGap || "0");
-    setActive(Math.max(0, Math.min(total - 1, Math.round(track.scrollLeft / step))));
-  }, [total]);
-
-  const goTo = useCallback((i: number) => {
-    const track = trackRef.current;
-    const card = track?.children[i] as HTMLElement | undefined;
-    if (!track || !card) return;
-    const smooth = !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    track.scrollTo({ left: card.offsetLeft - (track.clientWidth - card.offsetWidth) / 2, behavior: smooth ? "smooth" : "auto" });
-  }, []);
-
-  // A touch, swipe or tap pauses the auto-advance; it picks up again after a quiet moment.
-  const pause = useCallback(() => {
-    setPaused(true);
-    if (resumeTimer.current) clearTimeout(resumeTimer.current);
-    resumeTimer.current = setTimeout(() => {
-      setPaused(false);
-      setRound((r) => r + 1);
-    }, RESUME_MS);
-  }, []);
-
-  // Auto-advance, looping back to the first card.
   useEffect(() => {
-    if (!running || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const t = setTimeout(() => goTo((active + 1) % total), AUTO_MS);
-    return () => clearTimeout(t);
-  }, [running, active, round, total, goTo]);
-
-  // Softer coverflow than Featured: tilt, size and fade follow each card's distance from center.
-  useEffect(() => {
-    const track = trackRef.current;
-    if (!track || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    let frame = 0;
-    const update = () => {
-      frame = 0;
-      for (const slide of [...track.children] as HTMLElement[]) {
-        const center = slide.offsetLeft - track.scrollLeft + slide.offsetWidth / 2;
-        const c = Math.max(-1, Math.min(1, (center - track.clientWidth / 2) / slide.offsetWidth));
-        const a = Math.abs(c);
-        slide.style.transform = `perspective(900px) rotateY(${(-c * 10).toFixed(2)}deg) scale(${(1 - 0.08 * a).toFixed(3)})`;
-        slide.style.opacity = (1 - 0.45 * a).toFixed(3);
-      }
+    const el = ref.current;
+    if (!el) return;
+    const onLit = () => {
+      decrypt();
+      setBoot((b) => b + 1);
     };
-    const schedule = () => {
-      if (!frame) frame = requestAnimationFrame(update);
-    };
-    update();
-    track.addEventListener("scroll", schedule, { passive: true });
-    window.addEventListener("resize", schedule);
-    return () => {
-      cancelAnimationFrame(frame);
-      track.removeEventListener("scroll", schedule);
-      window.removeEventListener("resize", schedule);
-    };
-  }, []);
+    el.addEventListener("skill:lit", onLit);
+    return () => el.removeEventListener("skill:lit", onLit);
+  }, [decrypt]);
 
   return (
-    <div className="sm:hidden">
-      <motion.div
-        ref={trackRef}
-        onScroll={onScroll}
-        onPointerDown={pause}
-        onTouchStart={pause}
-        onFocusCapture={pause}
-        variants={staggerContainer(0.08)}
-        initial="hidden"
-        whileInView="show"
-        viewport={{ once: true, amount: 0.2 }}
-        role="region"
-        aria-roledescription="carousel"
-        aria-label="Skills by area"
-        // Side padding centers the first and last cards; -my/py gives the glow room (rows clip vertically).
-        className="featured-track -mx-6 -my-6 flex snap-x snap-mandatory gap-3 overflow-x-auto px-[11vw] py-6"
-      >
-        {skillCategories.map((c, i) => (
-          <CategoryCard key={c} category={c} slide={{ index: i, total }} isActive={i === active} />
-        ))}
-      </motion.div>
+    <span ref={ref} data-code-line data-category={category} className="code-line" aria-hidden={clone || undefined}>
+      <span className="code-kw">const </span>
+      <span className="code-name">{name}</span>
+      <span className="code-punc"> = [</span>
+      {items.map((s, i) => (
+        <span key={s.name}>
+          {i > 0 && <span className="code-punc">, </span>}
+          <SkillString
+            item={s}
+            boot={boot}
+            clone={clone}
+            selected={selectedSkill === s.name}
+            onPick={() => onPick(category, s.name)}
+          />
+        </span>
+      ))}
+      <span className="code-punc">];</span>
+    </span>
+  );
+}
 
-      {/* Dots: the active one fills up until the next move; tap any to jump. */}
-      <div className="mt-3 flex items-center justify-center gap-1.5">
-        {skillCategories.map((c, i) => (
-          <button
-            key={c}
-            type="button"
-            onClick={() => {
-              pause();
-              goTo(i);
-            }}
-            aria-label={`Show ${c} (${i + 1} of ${total})`}
-            aria-current={i === active}
-            className="flex h-6 items-center px-0.5"
-          >
-            <span
-              className={`relative block h-1.5 overflow-hidden rounded-full bg-white/20 transition-all duration-300 ${
-                i === active ? "w-7" : "w-1.5"
-              }`}
-            >
-              {i === active && (
-                <span
-                  key={`${active}-${round}-${running}`}
-                  className={`absolute inset-y-0 left-0 rounded-full bg-primary ${running ? "skill-progress" : "w-full"}`}
-                  style={running ? { animationDuration: `${AUTO_MS}ms` } : undefined}
-                />
-              )}
-            </span>
-          </button>
-        ))}
+const DRIFT_PX_PER_S = 36; // drift speed
+const IDLE_MS = 4000; // after a touch/swipe, wait this long before drifting again
+
+/**
+ * Phones: the skills as code in a terminal window. One long line of code drifts slowly past a
+ * blinking cursor in the middle; the line under the cursor decrypts from glyphs and lights up in
+ * syntax colors, and the comment below types out where those skills were used. Tap a skill for
+ * just that one. Touch stops the drift (swipe by hand, with native momentum); it drifts again after
+ * a quiet moment. Three copies of the code make the loop seamless. Only runs while on screen; with
+ * reduced motion it's a still, swipeable line.
+ */
+function SkillTerminal() {
+  const trackRef = useRef<HTMLDivElement>(null);
+  const [lit, setLit] = useState<Category | null>(null);
+  const [picked, setPicked] = useState<{ category: Category; skill: string } | null>(null);
+
+  useEffect(() => {
+    const track = trackRef.current;
+    if (!track) return;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const sets = track.querySelectorAll<HTMLElement>("[data-set]");
+    const lines = [...track.querySelectorAll<HTMLElement>("[data-code-line]")];
+    const setWidth = () => sets[1].offsetLeft - sets[0].offsetLeft;
+
+    let pos = setWidth(); // start on the middle copy
+    track.scrollLeft = pos;
+    let frame = 0;
+    let last = 0;
+    let touching = false;
+    let idleUntil = 0;
+    let current: HTMLElement | null = null;
+
+    // Keep the view on the middle copy; the copies are identical, so the jump can't be seen.
+    const wrap = () => {
+      const w = setWidth();
+      if (track.scrollLeft >= 2 * w) track.scrollLeft -= w;
+      else if (track.scrollLeft < w - track.clientWidth / 2) track.scrollLeft += w;
+    };
+
+    // Light the line under the cursor (the middle of the track).
+    const scan = () => {
+      const mid = track.scrollLeft + track.clientWidth / 2;
+      const hit = lines.find((l) => mid >= l.offsetLeft - 12 && mid < l.offsetLeft + l.offsetWidth + 12) ?? current;
+      if (hit === current) return;
+      current?.removeAttribute("data-lit");
+      hit?.setAttribute("data-lit", "");
+      hit?.dispatchEvent(new Event("skill:lit"));
+      current = hit;
+      setLit((hit?.dataset.category as Category) ?? null);
+    };
+
+    const tick = (now: number) => {
+      const dt = last ? Math.min(64, now - last) : 16;
+      last = now;
+      if (!reduce && !touching && now > idleUntil) {
+        pos += (DRIFT_PX_PER_S * dt) / 1000;
+        const w = setWidth();
+        if (pos >= 2 * w) pos -= w;
+        track.scrollLeft = pos;
+      } else {
+        pos = track.scrollLeft;
+      }
+      scan();
+      frame = requestAnimationFrame(tick);
+    };
+    const start = () => {
+      if (!frame) {
+        last = 0;
+        frame = requestAnimationFrame(tick);
+      }
+    };
+    const stop = () => {
+      cancelAnimationFrame(frame);
+      frame = 0;
+    };
+
+    // Only animate while the terminal is on screen.
+    const io = new IntersectionObserver(([e]) => (e.isIntersecting ? start() : stop()), { threshold: 0.1 });
+    io.observe(track);
+
+    const hold = () => {
+      touching = true;
+    };
+    const release = () => {
+      if (!touching) return;
+      touching = false;
+      idleUntil = performance.now() + IDLE_MS;
+    };
+    const onScroll = () => {
+      if (touching || performance.now() < idleUntil) {
+        idleUntil = Math.max(idleUntil, performance.now() + IDLE_MS); // momentum keeps it paused
+        wrap();
+      }
+      if (!frame) scan();
+    };
+    const onWheel = () => {
+      idleUntil = performance.now() + IDLE_MS;
+    };
+    const onFocus = (e: FocusEvent) => {
+      // Keyboard users: hold still while they read (a tap also focuses the button; that's not this).
+      if ((e.target as HTMLElement).matches(":focus-visible")) idleUntil = performance.now() + 10_000;
+    };
+
+    track.addEventListener("pointerdown", hold);
+    track.addEventListener("touchstart", hold, { passive: true });
+    window.addEventListener("pointerup", release);
+    window.addEventListener("touchend", release);
+    window.addEventListener("pointercancel", release);
+    track.addEventListener("wheel", onWheel, { passive: true });
+    track.addEventListener("scroll", onScroll, { passive: true });
+    track.addEventListener("focusin", onFocus);
+    scan();
+
+    return () => {
+      stop();
+      io.disconnect();
+      track.removeEventListener("pointerdown", hold);
+      track.removeEventListener("touchstart", hold);
+      window.removeEventListener("pointerup", release);
+      window.removeEventListener("touchend", release);
+      window.removeEventListener("pointercancel", release);
+      track.removeEventListener("wheel", onWheel);
+      track.removeEventListener("scroll", onScroll);
+      track.removeEventListener("focusin", onFocus);
+    };
+  }, []);
+
+  // A picked skill only stays picked while its line is the one under the cursor.
+  const pick = picked && picked.category === lit ? picked : null;
+  const onPick = (category: Category, skill: string) =>
+    setPicked((p) => (p && p.category === category && p.skill === skill ? null : { category, skill }));
+
+  // The comment line under the code: the picked skill, or the whole line under the cursor.
+  let comment: React.ReactNode = null;
+  let commentKey = "none";
+  if (lit) {
+    const { accent } = CARD[lit];
+    const { items, allProjects, note } = categoryData(lit);
+    const item = pick ? items.find((s) => s.name === pick.skill) : undefined;
+    if (item) {
+      commentKey = `${lit}-${item.name}`;
+      comment = (
+        <>
+          {item.name} → <UsedIn item={item} accent={accent} />
+        </>
+      );
+    } else {
+      commentKey = lit;
+      comment = allProjects.length ? (
+        <>
+          used in: <ProjectLinks list={allProjects.slice(0, 3)} accent={accent} />
+          {allProjects.length > 3 && ` +${allProjects.length - 3}`}
+        </>
+      ) : (
+        <>used in: {note ?? "coursework"}</>
+      );
+    }
+  }
+
+  return (
+    <div className="skill-term glass-card overflow-hidden sm:hidden">
+      <div className="flex items-center gap-1.5 border-b border-white/[0.06] px-3.5 py-2.5" aria-hidden>
+        <span className="h-2.5 w-2.5 rounded-full bg-[#E58A8A]/70" />
+        <span className="h-2.5 w-2.5 rounded-full bg-[#ECA35F]/70" />
+        <span className="h-2.5 w-2.5 rounded-full bg-[#7FA88B]/70" />
+        <span className="ml-2 font-mono text-[11px] text-text-muted">~/skills — zsh</span>
+      </div>
+
+      <div className="py-3 font-mono text-[12px]">
+        <p className="px-3.5 text-text-secondary">
+          <span className="text-primary">$</span> cat stack.ts
+        </p>
+
+        <div className="relative mt-2.5">
+          <span className="code-cursor" aria-hidden />
+          <div ref={trackRef} role="region" aria-label="Skills by area, as code" className="code-track featured-track overflow-x-auto">
+            <div className="flex w-max items-center whitespace-nowrap py-1.5">
+              {[0, 1, 2].map((copy) => (
+                <span key={copy} data-set className="flex shrink-0 items-center">
+                  {skillCategories.map((c) => (
+                    <CodeLine
+                      key={c}
+                      category={c}
+                      clone={copy !== 1}
+                      selectedSkill={pick && pick.category === c ? pick.skill : null}
+                      onPick={onPick}
+                    />
+                  ))}
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <p className="mt-2.5 truncate px-3.5 text-[11px] leading-snug text-text-secondary" aria-live="polite">
+          <span key={commentKey} className="code-typed">
+            <span className="text-text-muted">{"// "}</span>
+            {comment}
+          </span>
+        </p>
       </div>
     </div>
   );
@@ -458,11 +587,11 @@ export default function Skills() {
           ))}
         </motion.div>
 
-        <SkillCarousel />
+        <SkillTerminal />
 
         <p className="mt-5 text-center font-mono text-[11px] text-text-secondary">
           <span className="text-primary">●</span> used in a project · <span className="text-text-muted">○</span> coursework ·{" "}
-          {skills.length} skills · <span className="sm:hidden">swipe or tap a skill</span>
+          {skills.length} skills · <span className="sm:hidden">touch to pause, tap a skill</span>
           <span className="hidden sm:inline">hover or tap a skill to see where it&apos;s used</span>
         </p>
       </div>
